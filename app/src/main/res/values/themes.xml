@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.FIT5046_app" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">#2db097</item>
+        <item name="colorPrimaryDark">#568686</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+
+        <!--
+        Define or override colorControlNormal.
+        This is the color applied to framework controls in their normal (unactivated, unchecked) state.
+        For example, the color of an unselected checkbox or radio button.
+        It's often a shade of gray or black for light themes, and a lighter gray or white for dark themes.
+        -->
+        <!-- use a standard Android color -->
+         <item name="colorControlNormal">@android:color/darker_gray</item>
+        <!--<item name="colorControlNormal">@color/my_icon_normal_color</item>-->
+
+    </style>
+</resources>
