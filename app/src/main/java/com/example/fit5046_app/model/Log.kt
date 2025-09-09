@@ -2,11 +2,11 @@ package com.example.fit5046_app.model
 
 import java.time.LocalDateTime
 
-enum class LogType {
-    DIET,
-    BLOOD_GLUCOSE,
-    EXERCISE,
-    MEDICATION
+enum class LogType(val displayName: String) {
+    DIET("Diet"),
+    BLOOD_GLUCOSE("Blood Glucose"),
+    EXERCISE("Exercise"),
+    MEDICATION("Medication")
 }
 
 enum class EntryPeriod(val displayName: String) {

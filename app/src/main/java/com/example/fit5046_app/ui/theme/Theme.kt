@@ -17,8 +17,11 @@ private val LightColorScheme = lightColorScheme(
     primary = AppPrimary, // Main teal
     secondary = AppPrimaryDark, // Dark teal for Title text on white background
     tertiary = AppTertiary, // Orange for small highlights
-    secondaryContainer = Color(0xFFcdede7), // Light teal
-    onBackground = Color.DarkGray
+    primaryContainer = Color(0xFFcdede7), // Light teal
+    secondaryContainer = Color(0xFFcdede7),
+    background = Color(0xFFf0f0f1), // Light gray for background
+    onBackground = Color.DarkGray,
+    surface = Color(0xFFffffff) // White for cards and other surface
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),

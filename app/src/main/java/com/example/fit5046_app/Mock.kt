@@ -40,9 +40,9 @@ fun getMockLogs(): List<Log> {
             id = "bg_yesterday_1",
             dateTime = LocalDateTime.of(
                 yesterday,
-                LocalTime.of(8, 45)
+                LocalTime.of(18, 0)
             ),
-            period = EntryPeriod.AFTER_BREAKFAST,
+            period = EntryPeriod.AFTER_EXERCISE,
             notes = "Feeling good.",
             value = 6.2f
         ),
@@ -53,7 +53,7 @@ fun getMockLogs(): List<Log> {
                 LocalTime.of(17, 30)
             ),
             period = EntryPeriod.EVENING,
-            notes = "Evening run.",
+            notes = null,
             durationMinutes = 30,
             exerciseType = ExerciseType.RUNNING,
             intensity = Intensity.MEDIUM
@@ -65,7 +65,7 @@ fun getMockLogs(): List<Log> {
                 LocalTime.of(20, 0)
             ),
             period = EntryPeriod.AFTER_DINNER,
-            notes = "Evening medication.",
+            notes = "Mild headache",
             name = "Metformin",
             dosage = 500f,
             dosageUnit = "mg"
@@ -79,7 +79,7 @@ fun getMockLogs(): List<Log> {
                 LocalTime.of(7, 30)
             ),
             period = EntryPeriod.BEFORE_BREAKFAST,
-            notes = "Morning meds.",
+            notes = null,
             name = "Vitamin D",
             dosage = 1000f,
             dosageUnit = "IU"
@@ -108,17 +108,17 @@ fun getMockLogs(): List<Log> {
                 LocalTime.of(14, 0)
             ),
             period = EntryPeriod.AFTER_LUNCH,
-            notes = null,
-            value = 5.8f
+            notes = "Glucose too high",
+            value = 8.0f
         ),
         ExerciseLog(
             id = "exercise_today_1",
             dateTime = LocalDateTime.of(
                 today,
-                LocalTime.of(9, 0)
+                LocalTime.of(11, 0)
             ),
             period = EntryPeriod.MORNING,
-            notes = "Morning Yoga session.",
+            notes = "Feeling great",
             durationMinutes = 45,
             exerciseType = ExerciseType.YOGA,
             intensity = Intensity.LOW
