@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,8 +48,11 @@ fun Dashboard() {
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
             GlucoseChartCard()
+            DietChartCard()
+            ExerciseChartCard()
         }
     }
 }
@@ -65,37 +71,51 @@ fun GlucoseChartCard() {
             Modifier
                 .padding(18.dp)
         ) {
-            Text(
-                text = "Blood Glucose",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1
-            )
+            Row {
+                Icon(
+                    painterResource(id = R.drawable.water_drop_24px),
+                    contentDescription = "Blood Glucose Icon",
+                    Modifier
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.CenterVertically)
 
-            Spacer(modifier = Modifier.height(4.dp))
+                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = "Blood Glucose",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1
+                    )
 
-            // Average Glucose
-            Text(
-                text = "Past 14 Days - All Periods",
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1
-            )
+                    Spacer(modifier = Modifier.height(4.dp))
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // TODO: Replace with average glucose from logs
-            Text(
-                text = "6.1 mmol/L (avg.)",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(vertical = 6.dp, horizontal = 6.dp)
-            )
+                    // Average Glucose
+                    Text(
+                        text = "Past 7 Days - All Periods",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // TODO: Replace with average glucose from logs
+                    Text(
+                        text = "6.1 mmol/L (avg.)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+            }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
 
             // Stats Table and Chart
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Left Side: Table
@@ -129,17 +149,15 @@ fun GlucoseChartCard() {
         }
 
     }
-
-
 }
 
 @Composable
 fun GlucoseStatRow(label: String, count: Int) {
 
-    val countColor = when {
-        label == "High" -> Color(0xffff9713) // orange for high
-        label == "Low" -> Color(0xFF8f84d4) // purple for low
-        label == "Good" -> MaterialTheme.colorScheme.primary
+    val countColor = when (label) {
+        "High" -> Color(0xffff9713) // orange for high
+        "Low" -> Color(0xFF8f84d4) // purple for low
+        "Good" -> MaterialTheme.colorScheme.primary
         else -> Color.Black
     }
 
@@ -164,5 +182,207 @@ fun GlucoseStatRow(label: String, count: Int) {
             textAlign = TextAlign.End,
             color = countColor
         )
+    }
+}
+
+@Composable
+fun DietChartCard() {
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            Modifier
+                .padding(18.dp)
+        ) {
+            Row {
+                Icon(
+                    painterResource(id = R.drawable.diet_24px),
+                    contentDescription = "Blood Glucose Icon",
+                    Modifier
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.CenterVertically)
+                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = "Diet",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Average Daily Calories
+                    Text(
+                        text = "Past 7 Days - All Periods",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // TODO: Replace with average from logs
+                    Text(
+                        text = "2056 cal/day (avg.)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+
+
+            // Stats Table and Chart
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Side: Table
+                Column(
+                    modifier = Modifier
+                        .weight(0.7f)
+                ) {
+                    Text(
+                        "Average Daily Intake",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                    DietStatRow(label = "Carbs (g)", count = 135)
+                    DietStatRow(label = "Protein (g)", count = 104)
+                    DietStatRow(label = "Fats (g)", count = 67)
+                }
+
+                // Right Side: Chart Image
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // TODO: Replace with actual chart
+                    Image(
+                        painter = painterResource(id = R.drawable.diet_chart),
+                        contentDescription = "Diet Chart Placeholder",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun DietStatRow(label: String, count: Int) {
+
+    val countColor = when (label) {
+        "Carbs (g)" -> Color(0xffff9713)
+        "Fats (g)" -> Color(0xFF8f84d4)
+        "Protein (g)" -> MaterialTheme.colorScheme.primary
+        else -> Color.Black
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.padding(vertical = 5.dp)
+        )
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+            fontSize = 18.sp,
+            textAlign = TextAlign.End,
+            color = countColor
+        )
+    }
+}
+
+@Composable
+fun ExerciseChartCard() {
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            Modifier
+                .padding(18.dp)
+        ) {
+            Row {
+                Icon(
+                    painterResource(id = R.drawable.exercise_24px),
+                    contentDescription = "Blood Glucose Icon",
+                    Modifier
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.CenterVertically)
+                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = "Exercise",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Total Minutes
+                    Text(
+                        text = "Past 7 Days - All Periods",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // TODO: Replace with average glucose from logs
+                    Text(
+                        text = "175 min (total)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    alignment = Alignment.CenterStart,
+                    painter = painterResource(id = R.drawable.exercise_chart),
+                    contentDescription = "Exercise Chart Placeholder",
+                )
+            }
+
+        }
+
     }
 }
