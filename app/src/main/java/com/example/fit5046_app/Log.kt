@@ -9,8 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +20,7 @@ import com.example.fit5046_app.model.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,6 +151,112 @@ fun ExpandableLogSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDialog(
+    date: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = date.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
+                        onDateSelected(selectedDate)
+                    }
+                    onDismiss()
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    time: LocalTime,
+    onTimeSelected: (LocalTime) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = time.hour,
+        initialMinute = time.minute,
+        is24Hour = true
+    )
+
+    TimePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    onTimeSelected(selectedTime)
+                    onDismiss()
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        TimePicker(state = timePickerState)
+    }
+}
+
+@Composable
+fun DatePickerDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Select Date") },
+        text = content,
+        confirmButton = confirmButton,
+        dismissButton = dismissButton
+    )
+}
+
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Select Time") },
+        text = content,
+        confirmButton = confirmButton,
+        dismissButton = dismissButton
+    )
+}
+
 @Composable
 fun DietLogForm() {
     var date by remember { mutableStateOf(LocalDate.now()) }
@@ -162,9 +267,13 @@ fun DietLogForm() {
     var protein by remember { mutableStateOf("") }
     var fat by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
-    var foodItems by remember { mutableStateOf(mutableListOf<FoodItemModel>()) }
     var newFoodName by remember { mutableStateOf("") }
-    var newFoodQuantity by remember { mutableStateOf("") }
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -177,18 +286,28 @@ fun DietLogForm() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                value = date.toString(),
-                onValueChange = { /* Date picker would be implemented here */ },
+                value = date.format(dateFormatter),
+                onValueChange = { },
                 label = { Text("Date") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showDatePicker = true }) {
+                        Text("📅")
+                    }
+                }
             )
             OutlinedTextField(
-                value = time.toString(),
-                onValueChange = { /* Time picker would be implemented here */ },
+                value = time.format(timeFormatter),
+                onValueChange = { },
                 label = { Text("Time") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showTimePicker = true }) {
+                        Text("🕐")
+                    }
+                }
             )
         }
 
@@ -238,14 +357,16 @@ fun DietLogForm() {
             OutlinedTextField(
                 value = calories,
                 onValueChange = { calories = it },
-                label = { Text("Calories") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Calories *") },
+                modifier = Modifier.weight(1f),
+                isError = calories.isBlank()
             )
             OutlinedTextField(
                 value = protein,
                 onValueChange = { protein = it },
-                label = { Text("Protein (g)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Protein (g) *") },
+                modifier = Modifier.weight(1f),
+                isError = protein.isBlank()
             )
         }
 
@@ -256,94 +377,34 @@ fun DietLogForm() {
             OutlinedTextField(
                 value = fat,
                 onValueChange = { fat = it },
-                label = { Text("Fat (g)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Fat (g) *") },
+                modifier = Modifier.weight(1f),
+                isError = fat.isBlank()
             )
             OutlinedTextField(
                 value = carbs,
                 onValueChange = { carbs = it },
-                label = { Text("Carbs (g)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Carbs (g) *") },
+                modifier = Modifier.weight(1f),
+                isError = carbs.isBlank()
             )
         }
 
         // Food Items
-        Text(
-            text = "Food Items",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Row(
+        OutlinedTextField(
+            value = newFoodName,
+            onValueChange = { newFoodName = it },
+            label = { Text("Food Items") },
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedTextField(
-                value = newFoodName,
-                onValueChange = { newFoodName = it },
-                label = { Text("Food Name") },
-                modifier = Modifier.weight(2f)
-            )
-            OutlinedTextField(
-                value = newFoodQuantity,
-                onValueChange = { newFoodQuantity = it },
-                label = { Text("Quantity") },
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(
-                onClick = {
-                    if (newFoodName.isNotBlank()) {
-                        foodItems.add(FoodItemModel(newFoodName, newFoodQuantity.ifBlank { null }))
-                        newFoodName = ""
-                        newFoodQuantity = ""
-                    }
-                }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Food Item")
-            }
-        }
-
-        // Display added food items
-        foodItems.forEach { foodItem ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = foodItem.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                        foodItem.quantity?.let { quantity ->
-                            Text(
-                                text = quantity,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    TextButton(
-                        onClick = { foodItems.remove(foodItem) }
-                    ) {
-                        Text("Remove")
-                    }
-                }
-            }
-        }
+            supportingText = { Text("Enter food items separated by commas (e.g., Apple, Banana, Rice)") },
+            minLines = 2
+        )
 
         // Notes
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text("Notes (Optional)") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -358,6 +419,16 @@ fun DietLogForm() {
                 val carbsFloat = carbs.toFloatOrNull()
 
                 if (caloriesInt != null && proteinFloat != null && fatFloat != null && carbsFloat != null) {
+                    // Parse comma-separated food items
+                    val parsedFoodItems = if (newFoodName.isNotBlank()) {
+                        newFoodName.split(",")
+                            .map { it.trim() }
+                            .filter { it.isNotBlank() }
+                            .map { FoodItemModel(it, null) }
+                    } else {
+                        emptyList()
+                    }
+
                     val dietLog = DietLog(
                         id = "diet_${System.currentTimeMillis()}",
                         dateTime = LocalDateTime.of(date, time),
@@ -367,7 +438,7 @@ fun DietLogForm() {
                         proteinGrams = proteinFloat,
                         fatGrams = fatFloat,
                         carbGrams = carbsFloat,
-                        foodItems = foodItems.toList()
+                        foodItems = parsedFoodItems
                     )
 
                     // Here you would save to your data store
@@ -377,7 +448,7 @@ fun DietLogForm() {
                     protein = ""
                     fat = ""
                     carbs = ""
-                    foodItems.clear()
+                    newFoodName = ""
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -385,6 +456,27 @@ fun DietLogForm() {
         ) {
             Text("Save Diet Log")
         }
+    }
+
+    // Date and Time Picker Dialogs
+    if (showDatePicker) {
+        DatePickerDialog(
+            date = date,
+            onDateSelected = { selectedDate ->
+                date = selectedDate
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            time = time,
+            onTimeSelected = { selectedTime ->
+                time = selectedTime
+            },
+            onDismiss = { showTimePicker = false }
+        )
     }
 }
 
@@ -395,6 +487,12 @@ fun BloodGlucoseLogForm() {
     var period by remember { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
     var notes by remember { mutableStateOf("") }
     var value by remember { mutableStateOf("") }
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -407,18 +505,28 @@ fun BloodGlucoseLogForm() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                value = date.toString(),
-                onValueChange = { /* Date picker would be implemented here */ },
+                value = date.format(dateFormatter),
+                onValueChange = { },
                 label = { Text("Date") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showDatePicker = true }) {
+                        Text("📅")
+                    }
+                }
             )
             OutlinedTextField(
-                value = time.toString(),
-                onValueChange = { /* Time picker would be implemented here */ },
+                value = time.format(timeFormatter),
+                onValueChange = { },
                 label = { Text("Time") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showTimePicker = true }) {
+                        Text("🕐")
+                    }
+                }
             )
         }
 
@@ -458,16 +566,17 @@ fun BloodGlucoseLogForm() {
         OutlinedTextField(
             value = value,
             onValueChange = { value = it },
-            label = { Text("Blood Glucose Level (mmol/L)") },
+            label = { Text("Blood Glucose Level (mmol/L) *") },
             modifier = Modifier.fillMaxWidth(),
-            supportingText = { Text("Normal range: 3.9 - 7.8 mmol/L") }
+            supportingText = { Text("Normal range: 3.9 - 7.8 mmol/L") },
+            isError = value.isBlank()
         )
 
         // Notes
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text("Notes (Optional)") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -499,6 +608,27 @@ fun BloodGlucoseLogForm() {
             Text("Save Blood Glucose Log")
         }
     }
+
+    // Date and Time Picker Dialogs
+    if (showDatePicker) {
+        DatePickerDialog(
+            date = date,
+            onDateSelected = { selectedDate ->
+                date = selectedDate
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            time = time,
+            onTimeSelected = { selectedTime ->
+                time = selectedTime
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
 }
 
 @Composable
@@ -511,6 +641,12 @@ fun ExerciseLogForm() {
     var exerciseType by remember { mutableStateOf(ExerciseType.RUNNING) }
     var intensity by remember { mutableStateOf(Intensity.MEDIUM) }
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -522,18 +658,28 @@ fun ExerciseLogForm() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                value = date.toString(),
-                onValueChange = { /* Date picker would be implemented here */ },
+                value = date.format(dateFormatter),
+                onValueChange = { },
                 label = { Text("Date") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showDatePicker = true }) {
+                        Text("📅")
+                    }
+                }
             )
             OutlinedTextField(
-                value = time.toString(),
-                onValueChange = { /* Time picker would be implemented here */ },
+                value = time.format(timeFormatter),
+                onValueChange = { },
                 label = { Text("Time") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showTimePicker = true }) {
+                        Text("🕐")
+                    }
+                }
             )
         }
 
@@ -609,8 +755,9 @@ fun ExerciseLogForm() {
             OutlinedTextField(
                 value = duration,
                 onValueChange = { duration = it },
-                label = { Text("Duration (minutes)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Duration (minutes) *") },
+                modifier = Modifier.weight(1f),
+                isError = duration.isBlank()
             )
 
             var intensityExpanded by remember { mutableStateOf(false) }
@@ -650,7 +797,7 @@ fun ExerciseLogForm() {
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text("Notes (Optional)") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -684,6 +831,27 @@ fun ExerciseLogForm() {
             Text("Save Exercise Log")
         }
     }
+
+    // Date and Time Picker Dialogs
+    if (showDatePicker) {
+        DatePickerDialog(
+            date = date,
+            onDateSelected = { selectedDate ->
+                date = selectedDate
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            time = time,
+            onTimeSelected = { selectedTime ->
+                time = selectedTime
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
 }
 
 @Composable
@@ -696,6 +864,12 @@ fun MedicationLogForm() {
     var dosage by remember { mutableStateOf("") }
     var dosageUnit by remember { mutableStateOf("mg") }
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -707,18 +881,28 @@ fun MedicationLogForm() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                value = date.toString(),
-                onValueChange = { /* Date picker would be implemented here */ },
+                value = date.format(dateFormatter),
+                onValueChange = { },
                 label = { Text("Date") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showDatePicker = true }) {
+                        Text("📅")
+                    }
+                }
             )
             OutlinedTextField(
-                value = time.toString(),
-                onValueChange = { /* Time picker would be implemented here */ },
+                value = time.format(timeFormatter),
+                onValueChange = { },
                 label = { Text("Time") },
                 modifier = Modifier.weight(1f),
-                readOnly = true
+                readOnly = true,
+                trailingIcon = {
+                    TextButton(onClick = { showTimePicker = true }) {
+                        Text("🕐")
+                    }
+                }
             )
         }
 
@@ -758,8 +942,9 @@ fun MedicationLogForm() {
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Medication Name") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Medication Name *") },
+            modifier = Modifier.fillMaxWidth(),
+            isError = name.isBlank()
         )
 
         // Dosage and Unit
@@ -770,8 +955,9 @@ fun MedicationLogForm() {
             OutlinedTextField(
                 value = dosage,
                 onValueChange = { dosage = it },
-                label = { Text("Dosage") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Dosage *") },
+                modifier = Modifier.weight(1f),
+                isError = dosage.isBlank()
             )
             OutlinedTextField(
                 value = dosageUnit,
@@ -786,7 +972,7 @@ fun MedicationLogForm() {
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Notes") },
+            label = { Text("Notes (Optional)") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -821,5 +1007,26 @@ fun MedicationLogForm() {
         ) {
             Text("Save Medication Log")
         }
+    }
+
+    // Date and Time Picker Dialogs
+    if (showDatePicker) {
+        DatePickerDialog(
+            date = date,
+            onDateSelected = { selectedDate ->
+                date = selectedDate
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            time = time,
+            onTimeSelected = { selectedTime ->
+                time = selectedTime
+            },
+            onDismiss = { showTimePicker = false }
+        )
     }
 }
