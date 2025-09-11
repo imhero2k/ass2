@@ -1,6 +1,8 @@
 package com.example.fit5046_app
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,16 +11,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,27 +50,92 @@ import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 @Composable
 fun DashboardPreview() {
     FIT5046_appTheme {
-        Dashboard()
+        Reports()
     }
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Dashboard() {
+fun Reports() {
+    var showDateRangePicker by remember { mutableStateOf(false) }
+
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+        Scaffold(
+            bottomBar = {
+                BottomButtonsContainer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    onDownloadClick = { /* TODO: Implement Download */ },
+                    onShareClick = { /* TODO: Implement Share */ }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { showDateRangePicker = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ) {
+                    Icon(
+                        painterResource(id = R.drawable.date_range_24px),
+                        contentDescription = "Select Date Range"
+                    )
+                }
+            },
+            floatingActionButtonPosition = FabPosition.End
+
+        ) { _ ->
+            Box() {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    GlucoseChartCard()
+                    DietChartCard()
+                    ExerciseChartCard()
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun BottomButtonsContainer(
+    modifier: Modifier = Modifier,
+    onDownloadClick: () -> Unit,
+    onShareClick: () -> Unit
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(
+            onClick = onDownloadClick,
+            modifier = Modifier.weight(1f)
         ) {
-            GlucoseChartCard()
-            DietChartCard()
-            ExerciseChartCard()
+            Icon(
+                painterResource(id = R.drawable.download_24px),
+                contentDescription = "Download Icon"
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text("Download")
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Button(
+            onClick = onShareClick,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(painterResource(id = R.drawable.mail_24px), contentDescription = "Share Icon")
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text("Share")
         }
     }
 }
-
 
 @Composable
 fun GlucoseChartCard() {

@@ -9,12 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun Reports() {
+fun Dashboard() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text("Reports Screen",
+        Text(
+            "Dashboard Screen",
             style = MaterialTheme.typography.headlineMedium
         )
     }
