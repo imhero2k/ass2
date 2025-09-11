@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import com.example.fit5046_app.model.BloodGlucoseLog
 import com.example.fit5046_app.model.DietLog
 import com.example.fit5046_app.model.ExerciseLog
+import com.example.fit5046_app.model.GlucoseRanges
 import com.example.fit5046_app.model.Log
 import com.example.fit5046_app.model.MedicationLog
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
@@ -237,14 +238,14 @@ fun SingleDayLogCard(dailyLogs: List<Log>, modifier: Modifier = Modifier) {
         return
     }
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             dailyLogs.forEachIndexed { index, logEntry ->
                 SingleLogEntryRow(log = logEntry)
@@ -357,10 +358,6 @@ fun DietLogContent(log: DietLog) {
     }
 }
 
-object GlucoseRanges {
-    const val GLUCOSE_UPPER_NORMAL = 7.8f
-    const val GLUCOSE_LOWER_NORMAL = 4.0f
-}
 
 @Composable
 fun BloodGlucoseLogContent(log: BloodGlucoseLog) {
