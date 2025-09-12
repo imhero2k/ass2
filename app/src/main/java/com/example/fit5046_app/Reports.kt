@@ -19,6 +19,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -28,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,10 +43,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Preview(showBackground = true)
@@ -100,6 +107,50 @@ fun Reports() {
             }
         }
 
+        if (showDateRangePicker) {
+            val dateRangeState = androidx.compose.material3.rememberDateRangePickerState()
+            val dateFormat = remember { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()) }
+            val headlineText = when {
+                dateRangeState.selectedStartDateMillis != null && dateRangeState.selectedEndDateMillis != null ->
+                    dateFormat.format(Date(dateRangeState.selectedStartDateMillis!!)) +
+                            " - " +
+                            dateFormat.format(Date(dateRangeState.selectedEndDateMillis!!))
+
+                dateRangeState.selectedStartDateMillis != null ->
+                    dateFormat.format(Date(dateRangeState.selectedStartDateMillis!!)) + " - "
+
+                else -> "Select Date Range"
+            }
+            DatePickerDialog(
+                onDismissRequest = { showDateRangePicker = false },
+                confirmButton = {
+                    TextButton(onClick = { showDateRangePicker = false }) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDateRangePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DateRangePicker(
+                    state = dateRangeState,
+                    title = { Text(text = "") },
+                    headline = {
+                        Text(
+                            text = headlineText,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
+        }
+
     }
 }
 
@@ -152,12 +203,12 @@ fun GlucoseChartCard() {
         ) {
             Row {
                 Icon(
-                    painterResource(id = R.drawable.water_drop_24px),
+                    painter = painterResource(id = R.drawable.water_drop_24px),
                     contentDescription = "Blood Glucose Icon",
-                    Modifier
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
                         .padding(horizontal = 4.dp)
                         .align(Alignment.CenterVertically)
-
                 )
                 Column(
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -283,7 +334,8 @@ fun DietChartCard() {
                     contentDescription = "Blood Glucose Icon",
                     Modifier
                         .padding(horizontal = 4.dp)
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Column(
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -415,7 +467,8 @@ fun ExerciseChartCard() {
                     contentDescription = "Blood Glucose Icon",
                     Modifier
                         .padding(horizontal = 4.dp)
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Column(
                     modifier = Modifier.padding(horizontal = 4.dp)
