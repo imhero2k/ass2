@@ -272,6 +272,17 @@ fun DietLogForm() {
     var carbs by remember { mutableStateOf("") }
     var newFoodName by remember { mutableStateOf("") }
 
+    // Radio button states for meal type
+    var selectedMealType by remember { mutableStateOf("Home Cooked") }
+    val mealTypes = listOf("Home Cooked", "Restaurant", "Takeout", "Fast Food", "Snack")
+
+    // Checkbox states for dietary preferences
+    var isVegetarian by remember { mutableStateOf(false) }
+    var isVegan by remember { mutableStateOf(false) }
+    var isGlutenFree by remember { mutableStateOf(false) }
+    var isLowCarb by remember { mutableStateOf(false) }
+    var isLowFat by remember { mutableStateOf(false) }
+
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -341,6 +352,137 @@ fun DietLogForm() {
                             period = entryPeriod
                             expanded = false
                         }
+                    )
+                }
+            }
+        }
+
+        // Meal Type Selection (Radio Buttons)
+        Text(
+            text = "Meal Type",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            mealTypes.forEach { mealType ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedMealType == mealType,
+                        onClick = { selectedMealType = mealType }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = mealType,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+
+        // Dietary Preferences (Checkboxes)
+        Text(
+            text = "Dietary Preferences",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Checkbox(
+                        checked = isVegetarian,
+                        onCheckedChange = { isVegetarian = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Vegetarian",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Checkbox(
+                        checked = isVegan,
+                        onCheckedChange = { isVegan = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Vegan",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Checkbox(
+                        checked = isGlutenFree,
+                        onCheckedChange = { isGlutenFree = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Gluten Free",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Checkbox(
+                        checked = isLowCarb,
+                        onCheckedChange = { isLowCarb = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Low Carb",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Checkbox(
+                        checked = isLowFat,
+                        onCheckedChange = { isLowFat = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Low Fat",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
@@ -731,6 +873,16 @@ fun ExerciseLogForm() {
     var duration by remember { mutableStateOf("") }
     var exerciseType by remember { mutableStateOf(ExerciseType.RUNNING) }
     var intensity by remember { mutableStateOf(Intensity.MEDIUM) }
+
+    // Radio button states for exercise location
+    var selectedLocation by remember { mutableStateOf("Indoor") }
+    val locations = listOf("Indoor", "Outdoor", "Gym", "Home", "Pool")
+
+    // Checkbox states for exercise characteristics
+    var withTrainer by remember { mutableStateOf(false) }
+    var withMusic by remember { mutableStateOf(false) }
+    var withGroup by remember { mutableStateOf(false) }
+    var feltGood by remember { mutableStateOf(false) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
