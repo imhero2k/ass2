@@ -33,7 +33,6 @@ fun Dashboard() {
             .verticalScroll(rememberScrollState())
     ) {
 
-        /* ── reminder section ─────────────────────────────────────────── */
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +76,6 @@ fun Dashboard() {
             }
         }
 
-        /* ── header with date navigation ─────────────────────────────── */
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -109,7 +107,6 @@ fun Dashboard() {
             }
         }
 
-        /* ── main content card ───────────────────────────────────────── */
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -122,7 +119,6 @@ fun Dashboard() {
                 modifier = Modifier.padding(20.dp)
             ) {
 
-                /* ── glucose target with metrics grid ──── */
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -143,13 +139,11 @@ fun Dashboard() {
 
                 Spacer(Modifier.height(8.dp))
 
-                /* ── metrics grid around central circle ─── */
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column {
-                        // Top row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -167,7 +161,6 @@ fun Dashboard() {
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Middle row with central circle
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -204,7 +197,6 @@ fun Dashboard() {
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Bottom row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -224,7 +216,6 @@ fun Dashboard() {
 
                 Spacer(Modifier.height(24.dp))
 
-                /* ── analysis section ────────────────────── */
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -251,7 +242,6 @@ fun Dashboard() {
 
                 Spacer(Modifier.height(20.dp))
 
-                /* ── chart with image ───────────────────── */
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -262,7 +252,6 @@ fun Dashboard() {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Replace with your dummy_chart image
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -286,7 +275,6 @@ fun Dashboard() {
 
                 Spacer(Modifier.height(16.dp))
 
-                /* ── summary cards ────────────────────────── */
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -313,7 +301,6 @@ fun Dashboard() {
     }
 }
 
-/* ─── helper composables ──────────────────────────────────────────────────── */
 @Composable
 private fun MetricCard(title: String, value: String, icon: String) {
     Column(
@@ -383,7 +370,6 @@ private fun SummaryCard(
     }
 }
 
-/* ─── preview ─────────────────────────────────────────────────────────────── */
 @Preview(showBackground = true)
 @Composable
 fun DashboardPreview() {
