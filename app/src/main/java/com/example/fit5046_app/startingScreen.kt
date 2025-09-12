@@ -1,6 +1,5 @@
 package com.example.fit5046_app
 
-// --- new / updated imports ---
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,13 +10,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource           // NEW
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.fit5046_app.R                       // auto-import after adding the image
+import com.example.fit5046_app.R
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,9 +41,7 @@ fun StartingScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
 
-        /* ───────────────────────────────────
-           TOP: logo + app name
-        ─────────────────────────────────── */
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 40.dp)
@@ -67,9 +64,7 @@ fun StartingScreen(
             )
         }
 
-        /* ───────────────────────────────────
-           MIDDLE: your illustration
-        ─────────────────────────────────── */
+
         Image(
             painter = painterResource(id = R.drawable.starting_screen), // ← your file
             contentDescription = "Welcome illustration",
@@ -79,9 +74,7 @@ fun StartingScreen(
                 .height(300.dp)
         )
 
-        /* ───────────────────────────────────
-           HEADLINE
-        ─────────────────────────────────── */
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "Forge Healthier Habits",
@@ -99,9 +92,7 @@ fun StartingScreen(
             )
         }
 
-        /* ───────────────────────────────────
-           BOTTOM: primary button + login link
-        ─────────────────────────────────── */
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(bottom = 32.dp)

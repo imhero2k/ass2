@@ -1,7 +1,6 @@
 package com.example.fit5046_app
 
 
-/* ─── imports ─────────────────────────────────────────────────────────────── */
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 
-/* ─── main composable ─────────────────────────────────────────────────────── */
 @Composable
 fun RegisterScreen(
     onRegisterClick: () -> Unit = {},
@@ -38,7 +36,6 @@ fun RegisterScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            /* ── teal header section ──────────────────────────────────────── */
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,7 +51,6 @@ fun RegisterScreen(
                 )
             }
 
-            /* ── white form section ───────────────────────────────────────── */
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -71,7 +67,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    /* ── name field ───────────────────────────────────────── */
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
@@ -86,7 +81,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    /* ── email field ──────────────────────────────────────── */
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
@@ -101,7 +95,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    /* ── mobile field ─────────────────────────────────────── */
                     OutlinedTextField(
                         value = mobile,
                         onValueChange = { mobile = it },
@@ -116,7 +109,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    /* ── password field ───────────────────────────────────── */
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
@@ -132,7 +124,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(32.dp))
 
-                    /* ── register button ──────────────────────────────────── */
                     Button(
                         onClick = onRegisterClick,
                         shape = RoundedCornerShape(50),
@@ -145,7 +136,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(32.dp))
 
-                    /* ── divider ─────────────────────────────────────────── */
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -162,7 +152,6 @@ fun RegisterScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    /* ── social buttons ──────────────────────────────────── */
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
                         modifier = Modifier.fillMaxWidth()
@@ -174,7 +163,6 @@ fun RegisterScreen(
             }
         }
 
-        /* ── back button (floating) ───────────────────────────────────────── */
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
@@ -199,7 +187,6 @@ fun RegisterScreen(
     }
 }
 
-/* helper composable for social icons */
 @Composable
 private fun SocialSquare(letter: String, bg: Color, onClick: () -> Unit) {
     IconButton(onClick = onClick) {
@@ -215,7 +202,6 @@ private fun SocialSquare(letter: String, bg: Color, onClick: () -> Unit) {
     }
 }
 
-/* ─── preview ─────────────────────────────────────────────────────────────── */
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {

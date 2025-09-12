@@ -2,7 +2,6 @@ package com.example.fit5046_app
 
 
 
-/* ─── imports ─────────────────────────────────────────────────────────────── */
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 
-/* ─── main composable ─────────────────────────────────────────────────────── */
 @Composable
 fun LoginScreen(
     onLoginClick: () -> Unit = {},
@@ -56,7 +54,6 @@ fun LoginScreen(
             )
         }
 
-        /* ── white form section ───────────────────────────────────────── */
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,7 +70,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                /* ── email field ──────────────────────────────────────── */
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -88,7 +84,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                /* ── password field ───────────────────────────────────── */
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -102,7 +97,6 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                /* ── forgot password ─────────────────────────────────────────── */
                 Text(
                     "Forgot password?",
                     fontSize = 14.sp,
@@ -117,7 +111,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                /* ── login button ─────────────────────────────────────────── */
                 Button(
                     onClick = onLoginClick,
                     shape = RoundedCornerShape(50),
@@ -130,7 +123,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                /* ── register prompt ──────────────────────────────────────── */
                 Text(
                     buildAnnotatedString {
                         withStyle(SpanStyle(color = Color.DarkGray.copy(alpha = 0.7f))) {
@@ -150,7 +142,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                /* ── divider ─────────────────────────────────────────────── */
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -167,7 +158,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                /* ── social buttons ──────────────────────────────────────── */
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
                     modifier = Modifier.fillMaxWidth()
@@ -180,7 +170,6 @@ fun LoginScreen(
     }
 }
 
-/* helper composable for social icons */
 @Composable
 private fun SocialSquare(letter: String, bg: Color, onClick: () -> Unit) {
     IconButton(onClick = onClick) {
@@ -196,7 +185,6 @@ private fun SocialSquare(letter: String, bg: Color, onClick: () -> Unit) {
     }
 }
 
-/* ─── preview ─────────────────────────────────────────────────────────────── */
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
