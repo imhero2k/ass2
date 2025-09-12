@@ -44,7 +44,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FIT5046_appTheme {
-//                StartPage()
+//                LoginScreen()
+//                RegisterScreen()
                 ExpandedModalNavigationRail()
             }
         }

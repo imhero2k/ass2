@@ -4,7 +4,18 @@ package com.example.fit5046_app
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -12,19 +23,52 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.fit5046_app.model.*
+import com.example.fit5046_app.model.BloodGlucoseLog
+import com.example.fit5046_app.model.DietLog
+import com.example.fit5046_app.model.EntryPeriod
+import com.example.fit5046_app.model.ExerciseLog
+import com.example.fit5046_app.model.ExerciseType
+import com.example.fit5046_app.model.FoodItemModel
+import com.example.fit5046_app.model.Intensity
+import com.example.fit5046_app.model.MedicationLog
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,21 +79,23 @@ fun Log() {
     var expandedMedication by remember { mutableStateOf(false) }
 
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = "Add New Log Entry",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
         // Diet Log Section
         ExpandableLogSection(
             title = "Diet Log",
+            logIcon = painterResource(id = R.drawable.diet_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedDiet,
             onToggle = { expandedDiet = !expandedDiet }
@@ -57,11 +103,12 @@ fun Log() {
             DietLogForm()
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Blood Glucose Log Section
         ExpandableLogSection(
             title = "Blood Glucose Log",
+            logIcon = painterResource(id = R.drawable.water_drop_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedBloodGlucose,
             onToggle = { expandedBloodGlucose = !expandedBloodGlucose }
@@ -69,11 +116,12 @@ fun Log() {
             BloodGlucoseLogForm()
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Exercise Log Section
         ExpandableLogSection(
             title = "Exercise Log",
+            logIcon = painterResource(id = R.drawable.exercise_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedExercise,
             onToggle = { expandedExercise = !expandedExercise }
@@ -81,11 +129,12 @@ fun Log() {
             ExerciseLogForm()
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Medication Log Section
         ExpandableLogSection(
             title = "Medication Log",
+            logIcon = painterResource(id = R.drawable.med_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedMedication,
             onToggle = { expandedMedication = !expandedMedication }
@@ -98,6 +147,7 @@ fun Log() {
 @Composable
 fun ExpandableLogSection(
     title: String,
+    logIcon: Painter,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isExpanded: Boolean,
     onToggle: () -> Unit,
@@ -110,7 +160,10 @@ fun ExpandableLogSection(
     )
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
@@ -118,15 +171,26 @@ fun ExpandableLogSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = logIcon,
+                        contentDescription = "Log Type Icon",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
 
                 IconButton(
                     onClick = onToggle,
@@ -162,7 +226,8 @@ fun DatePickerDialog(
     onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        initialSelectedDateMillis = date.atStartOfDay().atZone(java.time.ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
     )
 
     DatePickerDialog(
@@ -303,7 +368,7 @@ fun DietLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.6f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -315,7 +380,7 @@ fun DietLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.4f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
@@ -343,7 +408,8 @@ fun DietLogForm() {
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = Color.White
             ) {
                 EntryPeriod.values().forEach { entryPeriod ->
                     DropdownMenuItem(
@@ -741,7 +807,7 @@ fun BloodGlucoseLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.6f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -753,7 +819,7 @@ fun BloodGlucoseLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.4f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
@@ -904,7 +970,7 @@ fun ExerciseLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.6f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -916,7 +982,7 @@ fun ExerciseLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.4f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
@@ -944,7 +1010,8 @@ fun ExerciseLogForm() {
             )
             ExposedDropdownMenu(
                 expanded = periodExpanded,
-                onDismissRequest = { periodExpanded = false }
+                onDismissRequest = { periodExpanded = false },
+                containerColor = Color.White
             ) {
                 EntryPeriod.values().forEach { entryPeriod ->
                     DropdownMenuItem(
@@ -976,7 +1043,8 @@ fun ExerciseLogForm() {
             )
             ExposedDropdownMenu(
                 expanded = typeExpanded,
-                onDismissRequest = { typeExpanded = false }
+                onDismissRequest = { typeExpanded = false },
+                containerColor = Color.White
             ) {
                 ExerciseType.values().forEach { type ->
                     DropdownMenuItem(
@@ -1127,7 +1195,7 @@ fun MedicationLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.6f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -1139,7 +1207,7 @@ fun MedicationLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.4f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {

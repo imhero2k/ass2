@@ -203,12 +203,12 @@ fun GlucoseChartCard() {
         ) {
             Row {
                 Icon(
-                    painterResource(id = R.drawable.water_drop_24px),
+                    painter = painterResource(id = R.drawable.water_drop_24px),
                     contentDescription = "Blood Glucose Icon",
-                    Modifier
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
                         .padding(horizontal = 4.dp)
                         .align(Alignment.CenterVertically)
-
                 )
                 Column(
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -334,7 +334,8 @@ fun DietChartCard() {
                     contentDescription = "Blood Glucose Icon",
                     Modifier
                         .padding(horizontal = 4.dp)
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Column(
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -466,7 +467,8 @@ fun ExerciseChartCard() {
                     contentDescription = "Blood Glucose Icon",
                     Modifier
                         .padding(horizontal = 4.dp)
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Column(
                     modifier = Modifier.padding(horizontal = 4.dp)
