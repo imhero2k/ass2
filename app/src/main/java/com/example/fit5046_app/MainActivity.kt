@@ -24,18 +24,25 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -44,17 +51,42 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FIT5046_appTheme {
-//                LoginScreen()
-//                RegisterScreen()
-                ExpandedModalNavigationRail()
+                AppContent()
             }
         }
     }
 }
 
+@Composable
+fun AppContent() {
+    var isAuthenticated by remember { mutableStateOf(false) }
+    val authViewModel: AuthViewModel = viewModel()
+    val authState by authViewModel.authState.collectAsState()
+
+    // Check authentication state on app start
+    LaunchedEffect(Unit) {
+        isAuthenticated = FirebaseAuth.getInstance().currentUser != null
+    }
+
+    // Listen for auth state changes
+    LaunchedEffect(authState.user) {
+        isAuthenticated = authState.user != null
+    }
+
+    if (isAuthenticated) {
+        ExpandedModalNavigationRail(authViewModel = authViewModel)
+    } else {
+        AuthenticationScreen(
+            onAuthSuccess = {
+                isAuthenticated = true
+            }
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExpandedModalNavigationRail() {
+fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -147,7 +179,7 @@ fun ExpandedModalNavigationRail() {
                 composable(Destination.LOG.route) { Log() }
                 composable(Destination.REPORTS.route) { Reports() }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }
-                composable(Destination.USERSETTING.route) { UserSetting() }
+                composable(Destination.USERSETTING.route) { UserSetting(authViewModel) }
 
             }
         }
