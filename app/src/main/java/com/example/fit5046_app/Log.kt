@@ -2,6 +2,10 @@
 
 package com.example.fit5046_app
 
+import BloodGlucoseLogEntity
+import DietLogEntity
+import FoodItem
+import LogViewModel
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -57,6 +61,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fit5046_app.model.BloodGlucoseLog
 import com.example.fit5046_app.model.DietLog
 import com.example.fit5046_app.model.EntryPeriod
@@ -73,6 +78,45 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Log() {
+    val logViewModel: LogViewModel = viewModel()
+    val sampleBGLog1 = BloodGlucoseLogEntity(
+        userId = "abc",
+        dateTime = LocalDateTime.now(),
+        period = EntryPeriod.BREAKFAST,
+        notes = "test bg log 1",
+        value = 4.5f
+    )
+    val sampleBGLog2 = BloodGlucoseLogEntity(
+        userId = "abc",
+        dateTime = LocalDateTime.now(),
+        period = EntryPeriod.AFTER_DINNER,
+        notes = "test bg log 2",
+        value = 5.6f
+    )
+    val sampleBGLog3 = BloodGlucoseLogEntity(
+        userId = "abc",
+        dateTime = LocalDateTime.now(),
+        period = EntryPeriod.BEFORE_MEDICATION,
+        notes = "test bg log 3",
+        value = 4.3f
+    )
+    val sampleDietLog1 = DietLogEntity(
+        userId = "abc",
+        dateTime = LocalDateTime.now(),
+        period = EntryPeriod.BREAKFAST,
+        notes = "test diet log 1",
+        calories = 150,
+        proteinGrams = 10f,
+        fatGrams = 20f,
+        carbGrams = 30f,
+        foodItems = listOf(
+            FoodItem("Apple", "1"),
+            FoodItem("Eggs", "2")
+        )
+    )
+    logViewModel.insertBloodGlucoseLog(sampleBGLog1)
+    logViewModel.insertDietLog(sampleDietLog1)
+
     var expandedDiet by remember { mutableStateOf(false) }
     var expandedBloodGlucose by remember { mutableStateOf(false) }
     var expandedExercise by remember { mutableStateOf(false) }

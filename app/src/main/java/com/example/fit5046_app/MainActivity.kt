@@ -143,7 +143,7 @@ fun ExpandedModalNavigationRail() {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Destination.DASHBOARD.route) { Dashboard() }
-                composable(Destination.DIARY.route) { Diary(getMockLogs()) }
+                composable(Destination.DIARY.route) { Diary() }
                 composable(Destination.LOG.route) { Log() }
                 composable(Destination.REPORTS.route) { Reports() }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }

@@ -1,5 +1,6 @@
 package com.example.fit5046_app
 
+import DiaryViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,15 +48,15 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.fit5046_app.model.BloodGlucoseLog
-import com.example.fit5046_app.model.DietLog
-import com.example.fit5046_app.model.ExerciseLog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fit5046_app.model.GlucoseRanges
 import com.example.fit5046_app.model.Log
-import com.example.fit5046_app.model.MedicationLog
+import com.example.fit5046_app.model.LogDisplayItem
+import com.example.fit5046_app.model.LogType
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import android.util.Log as AndroidLog
 
 object DateTimeFormatters {
     val dateFormatter: DateTimeFormatter =
@@ -71,13 +73,17 @@ fun Preview() {
     FIT5046_appTheme {
         val myLogs = getMockLogs()
         val emptyLogs = listOf<Log>()
-        Diary(myLogs)
+        Diary()
     }
 }
 
 
 @Composable
-fun Diary(allLogs: List<Log>) {
+fun Diary() {
+    val diaryViewModel: DiaryViewModel = viewModel()
+    val allLogs by diaryViewModel.getAllLogs().collectAsState(initial = emptyList())
+    allLogs.forEach { AndroidLog.d("DEBUG_DIET", it.toString()) }
+
     if (allLogs.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("No logs yet. Add some!", style = MaterialTheme.typography.bodyLarge)
@@ -96,16 +102,21 @@ fun Diary(allLogs: List<Log>) {
             allLogs.filter { log ->
                 // Text search in notes or specific fields
                 (log.notes?.contains(searchInput, ignoreCase = true) == true) ||
-                        when (log) {
-                            is DietLog -> log.foodItems.any {
-                                it.name.contains(
-                                    searchInput,
-                                    ignoreCase = true
-                                )
-                            }
+                        when (log.type) {
+                            LogType.DIET -> (log as LogDisplayItem.DietItem).foodItems != null &&
+                                    log.foodItems!!.any {
+                                        it.name.contains(
+                                            searchInput,
+                                            ignoreCase = true
+                                        )
+                                    }
 
-                            is MedicationLog -> log.name.contains(searchInput, ignoreCase = true)
-                            is ExerciseLog -> log.exerciseType.displayName.contains(
+                            LogType.MEDICATION -> (log as LogDisplayItem.MedicationItem).name.contains(
+                                searchInput,
+                                ignoreCase = true
+                            )
+
+                            LogType.EXERCISE -> (log as LogDisplayItem.ExerciseItem).exerciseType.displayName.contains(
                                 searchInput,
                                 ignoreCase = true
                             )
@@ -227,7 +238,7 @@ fun Diary(allLogs: List<Log>) {
 }
 
 @Composable
-fun SingleDayLogCard(dailyLogs: List<Log>, modifier: Modifier = Modifier) {
+fun SingleDayLogCard(dailyLogs: List<LogDisplayItem>, modifier: Modifier = Modifier) {
     if (dailyLogs.isEmpty()) {
         // This case might not be reached if dailyLogs filters out empty dates
         Text(
@@ -259,7 +270,7 @@ fun SingleDayLogCard(dailyLogs: List<Log>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SingleLogEntryRow(log: Log, modifier: Modifier = Modifier) {
+fun SingleLogEntryRow(log: LogDisplayItem, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -288,11 +299,11 @@ fun SingleLogEntryRow(log: Log, modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(4.dp))
 
             // Log Data
-            when (log) {
-                is DietLog -> DietLogContent(log)
-                is BloodGlucoseLog -> BloodGlucoseLogContent(log)
-                is ExerciseLog -> ExerciseLogContent(log)
-                is MedicationLog -> MedicationLogContent(log)
+            when (log.type) {
+                LogType.DIET -> DietLogContent(log as LogDisplayItem.DietItem)
+                LogType.BLOOD_GLUCOSE -> BloodGlucoseLogContent(log as LogDisplayItem.GlucoseItem)
+                LogType.EXERCISE -> ExerciseLogContent(log as LogDisplayItem.ExerciseItem)
+                LogType.MEDICATION -> MedicationLogContent(log as LogDisplayItem.MedicationItem)
             }
 
             // Log Notes if Available
@@ -308,18 +319,12 @@ fun SingleLogEntryRow(log: Log, modifier: Modifier = Modifier) {
                 }
             }
         }
-
-        // TODO: Edit log via button or clicking the row?
-//        Icon(
-//            painter = painterResource(id = R.drawable.edit_24px),
-//            contentDescription = "Edit log"
-//        )
     }
 }
 
 
 @Composable
-fun DietLogContent(log: DietLog) {
+fun DietLogContent(log: LogDisplayItem.DietItem) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             buildAnnotatedString {
@@ -346,7 +351,7 @@ fun DietLogContent(log: DietLog) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        if (log.foodItems.isNotEmpty()) {
+        if (log.foodItems != null && log.foodItems.isNotEmpty()) {
             Text(
                 text = log.foodItems.joinToString { it.name },
                 style = MaterialTheme.typography.bodySmall,
@@ -360,7 +365,7 @@ fun DietLogContent(log: DietLog) {
 
 
 @Composable
-fun BloodGlucoseLogContent(log: BloodGlucoseLog) {
+fun BloodGlucoseLogContent(log: LogDisplayItem.GlucoseItem) {
     val valueColor = when {
         log.value > GlucoseRanges.GLUCOSE_UPPER_NORMAL -> Color(0xffff9713) // orange for high
         log.value < GlucoseRanges.GLUCOSE_LOWER_NORMAL -> Color(0xFF8f84d4) // purple for low
@@ -383,7 +388,7 @@ fun BloodGlucoseLogContent(log: BloodGlucoseLog) {
 }
 
 @Composable
-fun ExerciseLogContent(log: ExerciseLog) {
+fun ExerciseLogContent(log: LogDisplayItem.ExerciseItem) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             "${log.exerciseType.displayName} - ${log.durationMinutes} min",
@@ -402,7 +407,7 @@ fun ExerciseLogContent(log: ExerciseLog) {
 }
 
 @Composable
-fun MedicationLogContent(log: MedicationLog) {
+fun MedicationLogContent(log: LogDisplayItem.MedicationItem) {
     Text(
         "${log.name} - ${log.dosage.format(0)} ${log.dosageUnit}",
         style = MaterialTheme.typography.bodyMedium,

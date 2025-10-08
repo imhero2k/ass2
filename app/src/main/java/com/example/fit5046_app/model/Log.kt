@@ -1,5 +1,10 @@
 package com.example.fit5046_app.model
 
+import BloodGlucoseLogEntity
+import DietLogEntity
+import ExerciseLogEntity
+import FoodItem
+import MedicationLogEntity
 import java.time.LocalDateTime
 
 enum class LogType(val displayName: String) {
@@ -58,6 +63,8 @@ sealed interface Log {
     val period: EntryPeriod
     val type: LogType
     val notes: String?
+
+    companion object
 }
 
 data class FoodItemModel(
@@ -112,6 +119,107 @@ data class MedicationLog(
 ) : Log {
     override val type: LogType get() = LogType.MEDICATION
 }
+
+// ----- Log Item Models for Displaying in the Diary -----
+
+sealed class LogDisplayItem {
+    abstract val id: Int
+    abstract val dateTime: LocalDateTime
+    abstract val type: LogType
+    abstract val period: EntryPeriod
+    abstract val notes: String?
+
+    data class DietItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val calories: Int?,
+        val proteinGrams: Float?,
+        val fatGrams: Float?,
+        val carbGrams: Float?,
+        val foodItems: List<FoodItem>?
+    ) : LogDisplayItem() {
+        override val type = LogType.DIET
+    }
+
+    data class GlucoseItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val value: Float
+    ) : LogDisplayItem() {
+        override val type = LogType.BLOOD_GLUCOSE
+    }
+
+    data class ExerciseItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val exerciseType: ExerciseType,
+        val durationMinutes: Int,
+        val intensity: Intensity
+    ) : LogDisplayItem() {
+        override val type = LogType.EXERCISE
+    }
+
+    data class MedicationItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val name: String,
+        val dosage: Float,
+        val dosageUnit: String
+    ) : LogDisplayItem() {
+        override val type = LogType.MEDICATION
+    }
+}
+
+fun BloodGlucoseLogEntity.toDisplayItem(): LogDisplayItem = LogDisplayItem.GlucoseItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    value = value
+)
+
+fun MedicationLogEntity.toDisplayItem() = LogDisplayItem.MedicationItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    name = name,
+    dosage = dosage,
+    dosageUnit = dosageUnit
+)
+
+fun DietLogEntity.toDisplayItem(): LogDisplayItem = LogDisplayItem.DietItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    calories = calories,
+    proteinGrams = proteinGrams,
+    fatGrams = fatGrams,
+    carbGrams = carbGrams,
+    foodItems = foodItems
+)
+
+fun ExerciseLogEntity.toDisplayItem() = LogDisplayItem.ExerciseItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    exerciseType = exerciseType,
+    durationMinutes = durationMinutes,
+    intensity = intensity
+)
+
+
+
 
 
 
