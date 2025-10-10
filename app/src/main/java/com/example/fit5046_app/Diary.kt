@@ -87,7 +87,12 @@ fun Diary() {
             context.applicationContext as android.app.Application
         )
     )
-    val allLogs by diaryViewModel.getAllLogs().collectAsState(initial = emptyList())
+    
+    // Get current user ID from Firebase Auth
+    val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+    
+    // Get logs only for the current user
+    val allLogs by diaryViewModel.getAllLogsForUser(currentUserId).collectAsState(initial = emptyList())
     allLogs.forEach { AndroidLog.d("DEBUG_DIET", it.toString()) }
 
     if (allLogs.isEmpty()) {

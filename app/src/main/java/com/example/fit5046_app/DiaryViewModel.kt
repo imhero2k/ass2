@@ -20,6 +20,10 @@ class DiaryViewModel(application: Application) : AndroidViewModel(application) {
         return repository.getAllLogs()
     }
 
+    fun getAllLogsForUser(userId: String): Flow<List<LogDisplayItem>> {
+        return repository.getAllLogsForUser(userId)
+    }
+
     // private fun observeLogs() {
     //     viewModelScope.launch {
     //         repository.getAllLogs()

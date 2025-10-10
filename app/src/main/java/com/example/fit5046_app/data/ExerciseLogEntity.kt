@@ -22,7 +22,7 @@ import java.time.LocalDateTime
 data class ExerciseLogEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val userId: String,
+    val userId: String, // Firebase Auth UID
     val dateTime: LocalDateTime,
     val period: EntryPeriod,
     val notes: String?,

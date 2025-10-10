@@ -87,6 +87,10 @@ fun Log(navController: androidx.navigation.NavController? = null) {
             context.applicationContext as android.app.Application
         )
     )
+    
+    // Get current user ID from Firebase Auth
+    val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+    
     var expandedDiet by remember { mutableStateOf(false) }
     var expandedBloodGlucose by remember { mutableStateOf(false) }
     var expandedExercise by remember { mutableStateOf(false) }
@@ -115,6 +119,7 @@ fun Log(navController: androidx.navigation.NavController? = null) {
             onToggle = { expandedDiet = !expandedDiet }
         ) {
             DietLogForm(
+                userId = currentUserId,
                 logViewModel = logViewModel,
                 navController = navController
             )
@@ -131,6 +136,7 @@ fun Log(navController: androidx.navigation.NavController? = null) {
             onToggle = { expandedBloodGlucose = !expandedBloodGlucose }
         ) {
             BloodGlucoseLogForm(
+                userId = currentUserId,
                 logViewModel = logViewModel,
                 navController = navController
             )
@@ -147,6 +153,7 @@ fun Log(navController: androidx.navigation.NavController? = null) {
             onToggle = { expandedExercise = !expandedExercise }
         ) {
             ExerciseLogForm(
+                userId = currentUserId,
                 logViewModel = logViewModel,
                 navController = navController
             )
@@ -163,6 +170,7 @@ fun Log(navController: androidx.navigation.NavController? = null) {
             onToggle = { expandedMedication = !expandedMedication }
         ) {
             MedicationLogForm(
+                userId = currentUserId,
                 logViewModel = logViewModel,
                 navController = navController
             )
@@ -353,6 +361,7 @@ fun TimePickerDialog(
 
 @Composable
 fun DietLogForm(
+    userId: String,
     logViewModel: LogViewModel,
     navController: androidx.navigation.NavController?
 ) {
@@ -697,7 +706,7 @@ fun DietLogForm(
 
                     // Create DietLogEntity to save to database
                     val dietLogEntity = DietLogEntity(
-                        userId = "abc", // TODO: Replace with actual user ID
+                        userId = userId,
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
@@ -750,6 +759,7 @@ fun DietLogForm(
 
 @Composable
 fun BloodGlucoseLogForm(
+    userId: String,
     logViewModel: LogViewModel,
     navController: androidx.navigation.NavController?
 ) {
@@ -861,7 +871,7 @@ fun BloodGlucoseLogForm(
                 if (glucoseValue != null && glucoseValue > 0) {
                     // Create BloodGlucoseLogEntity to save to database
                     val bloodGlucoseLogEntity = BloodGlucoseLogEntity(
-                        userId = "abc", // TODO: Replace with actual user ID
+                        userId = userId,
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
@@ -908,6 +918,7 @@ fun BloodGlucoseLogForm(
 
 @Composable
 fun ExerciseLogForm(
+    userId: String,
     logViewModel: LogViewModel,
     navController: androidx.navigation.NavController?
 ) {
@@ -918,16 +929,6 @@ fun ExerciseLogForm(
     var duration by remember { mutableStateOf("") }
     var exerciseType by remember { mutableStateOf(ExerciseType.RUNNING) }
     var intensity by remember { mutableStateOf(Intensity.MEDIUM) }
-
-    // Radio button states for exercise location
-    var selectedLocation by remember { mutableStateOf("Indoor") }
-    val locations = listOf("Indoor", "Outdoor", "Gym", "Home", "Pool")
-
-    // Checkbox states for exercise characteristics
-    var withTrainer by remember { mutableStateOf(false) }
-    var withMusic by remember { mutableStateOf(false) }
-    var withGroup by remember { mutableStateOf(false) }
-    var feltGood by remember { mutableStateOf(false) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -1101,7 +1102,7 @@ fun ExerciseLogForm(
                 if (durationInt != null && durationInt > 0) {
                     // Create ExerciseLogEntity to save to database
                     val exerciseLogEntity = ExerciseLogEntity(
-                        userId = "abc", // TODO: Replace with actual user ID
+                        userId = userId,
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
@@ -1150,6 +1151,7 @@ fun ExerciseLogForm(
 
 @Composable
 fun MedicationLogForm(
+    userId: String,
     logViewModel: LogViewModel,
     navController: androidx.navigation.NavController?
 ) {
@@ -1283,7 +1285,7 @@ fun MedicationLogForm(
                 if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
                     // Create MedicationLogEntity to save to database
                     val medicationLogEntity = MedicationLogEntity(
-                        userId = "abc", // TODO: Replace with actual user ID
+                        userId = userId,
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },

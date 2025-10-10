@@ -68,4 +68,21 @@ class LogRepository(application: Application) {
             all.sortedByDescending { it.dateTime }
         }
     }
+
+    // ----- Get all logs for a specific user -----
+    fun getAllLogsForUser(userId: String): Flow<List<LogDisplayItem>> {
+        return combine(
+            dietLogDao.getAllLogsForUser(userId),
+            bloodGlucoseLogDao.getAllLogsForUser(userId),
+            exerciseLogDao.getAllLogsForUser(userId),
+            medicationLogDao.getAllLogsForUser(userId)
+        ) { dietLogs, glucoseLogs, exerciseLogs, medicationLogs ->
+            val all = mutableListOf<LogDisplayItem>()
+            all += dietLogs.map { it.toDisplayItem() }
+            all += glucoseLogs.map { it.toDisplayItem() }
+            all += exerciseLogs.map { it.toDisplayItem() }
+            all += medicationLogs.map { it.toDisplayItem() }
+            all.sortedByDescending { it.dateTime }
+        }
+    }
 }

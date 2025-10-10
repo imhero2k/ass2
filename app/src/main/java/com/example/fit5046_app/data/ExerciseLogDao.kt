@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExerciseLogDao {
-    // @Query("SELECT * FROM exercise_logs WHERE userId = :userId ORDER BY dateTime DESC")
-    // fun getAllLogs(userId: String): Flow<List<ExerciseLogEntity>>
+    @Query("SELECT * FROM exercise_logs WHERE userId = :userId ORDER BY dateTime DESC")
+    fun getAllLogsForUser(userId: String): Flow<List<ExerciseLogEntity>>
 
     @Query("SELECT * FROM exercise_logs ORDER BY dateTime DESC")
     fun getAllLogs(): Flow<List<ExerciseLogEntity>>
