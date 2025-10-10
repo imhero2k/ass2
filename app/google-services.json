@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "53865732457",
+    "project_id": "mobile-c7a37",
+    "storage_bucket": "mobile-c7a37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53865732457:android:b2c552de9a03c30730c5f8",
+        "android_client_info": {
+          "package_name": "com.example.fit5046_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6DsSRc7SLJx_BSg7TPyLPbKpkt1M3GL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -13,5 +13,11 @@ enum class Destination(
     LOG("log", "Log", R.drawable.add_24px),
     REPORTS("reports", "Reports", R.drawable.reports_24px),
     HEALTHBLOG("healthblog", "Health Blog", R.drawable.news_24px),
-    USERSETTING("usersetting", "User", R.drawable.user_24px)
+    USERSETTING("usersetting", "User", R.drawable.user_24px),
+}
+
+object SubRoutes {
+    const val USERPROFILE = "userprofile"
+    const val REMINDERMANAGEMENT = "remindermanagement"
+    const val APPINFORMATION = "appinformation"
 }
