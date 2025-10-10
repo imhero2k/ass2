@@ -1,3 +1,5 @@
+package com.example.fit5046_app.data
+
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
@@ -8,11 +10,11 @@ import androidx.room.TypeConverters
     entities = [
         UserEntity::class,
         BloodGlucoseLogEntity::class,
-        DietLogEntity::class
-        // ExerciseLogEntity::class,
-        // MedicationLogEntity::class
+        DietLogEntity::class,
+        ExerciseLogEntity::class,
+        MedicationLogEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -20,8 +22,10 @@ abstract class LogDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun bloodGlucoseLogDao(): BloodGlucoseLogDao
     abstract fun dietLogDao(): DietLogDao
-    // abstract fun exerciseLogDao(): ExerciseLogDao
-    // abstract fun medicationLogDao(): MedicationLogDao
+
+    abstract fun exerciseLogDao(): ExerciseLogDao
+
+    abstract fun medicationLogDao(): MedicationLogDao
 
     companion object {
         @Volatile

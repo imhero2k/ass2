@@ -2,10 +2,6 @@
 
 package com.example.fit5046_app
 
-import BloodGlucoseLogEntity
-import DietLogEntity
-import FoodItem
-import LogViewModel
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -58,17 +54,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.fit5046_app.data.BloodGlucoseLogEntity
+import com.example.fit5046_app.data.DietLogEntity
+import com.example.fit5046_app.data.ExerciseLogEntity
+import com.example.fit5046_app.data.MedicationLogEntity
 import com.example.fit5046_app.model.BloodGlucoseLog
 import com.example.fit5046_app.model.DietLog
+import com.example.fit5046_app.model.DietaryPreference
 import com.example.fit5046_app.model.EntryPeriod
 import com.example.fit5046_app.model.ExerciseLog
 import com.example.fit5046_app.model.ExerciseType
-import com.example.fit5046_app.model.FoodItemModel
 import com.example.fit5046_app.model.Intensity
+import com.example.fit5046_app.model.MealType
 import com.example.fit5046_app.model.MedicationLog
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -77,46 +80,13 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Log() {
-    val logViewModel: LogViewModel = viewModel()
-    val sampleBGLog1 = BloodGlucoseLogEntity(
-        userId = "abc",
-        dateTime = LocalDateTime.now(),
-        period = EntryPeriod.BREAKFAST,
-        notes = "test bg log 1",
-        value = 4.5f
-    )
-    val sampleBGLog2 = BloodGlucoseLogEntity(
-        userId = "abc",
-        dateTime = LocalDateTime.now(),
-        period = EntryPeriod.AFTER_DINNER,
-        notes = "test bg log 2",
-        value = 5.6f
-    )
-    val sampleBGLog3 = BloodGlucoseLogEntity(
-        userId = "abc",
-        dateTime = LocalDateTime.now(),
-        period = EntryPeriod.BEFORE_MEDICATION,
-        notes = "test bg log 3",
-        value = 4.3f
-    )
-    val sampleDietLog1 = DietLogEntity(
-        userId = "abc",
-        dateTime = LocalDateTime.now(),
-        period = EntryPeriod.BREAKFAST,
-        notes = "test diet log 1",
-        calories = 150,
-        proteinGrams = 10f,
-        fatGrams = 20f,
-        carbGrams = 30f,
-        foodItems = listOf(
-            FoodItem("Apple", "1"),
-            FoodItem("Eggs", "2")
+fun Log(navController: androidx.navigation.NavController? = null) {
+    val context = LocalContext.current
+    val logViewModel: LogViewModel = viewModel(
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
+            context.applicationContext as android.app.Application
         )
     )
-    logViewModel.insertBloodGlucoseLog(sampleBGLog1)
-    logViewModel.insertDietLog(sampleDietLog1)
-
     var expandedDiet by remember { mutableStateOf(false) }
     var expandedBloodGlucose by remember { mutableStateOf(false) }
     var expandedExercise by remember { mutableStateOf(false) }
@@ -144,7 +114,10 @@ fun Log() {
             isExpanded = expandedDiet,
             onToggle = { expandedDiet = !expandedDiet }
         ) {
-            DietLogForm()
+            DietLogForm(
+                logViewModel = logViewModel,
+                navController = navController
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -157,7 +130,10 @@ fun Log() {
             isExpanded = expandedBloodGlucose,
             onToggle = { expandedBloodGlucose = !expandedBloodGlucose }
         ) {
-            BloodGlucoseLogForm()
+            BloodGlucoseLogForm(
+                logViewModel = logViewModel,
+                navController = navController
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -170,7 +146,10 @@ fun Log() {
             isExpanded = expandedExercise,
             onToggle = { expandedExercise = !expandedExercise }
         ) {
-            ExerciseLogForm()
+            ExerciseLogForm(
+                logViewModel = logViewModel,
+                navController = navController
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -183,7 +162,10 @@ fun Log() {
             isExpanded = expandedMedication,
             onToggle = { expandedMedication = !expandedMedication }
         ) {
-            MedicationLogForm()
+            MedicationLogForm(
+                logViewModel = logViewModel,
+                navController = navController
+            )
         }
     }
 }
@@ -370,7 +352,10 @@ fun TimePickerDialog(
 }
 
 @Composable
-fun DietLogForm() {
+fun DietLogForm(
+    logViewModel: LogViewModel,
+    navController: androidx.navigation.NavController?
+) {
     var date by remember { mutableStateOf(LocalDate.now()) }
     var time by remember { mutableStateOf(LocalTime.now()) }
     var period by remember { mutableStateOf(EntryPeriod.BREAKFAST) }
@@ -382,15 +367,10 @@ fun DietLogForm() {
     var newFoodName by remember { mutableStateOf("") }
 
     // Radio button states for meal type
-    var selectedMealType by remember { mutableStateOf("Home Cooked") }
-    val mealTypes = listOf("Home Cooked", "Restaurant", "Takeout", "Fast Food", "Snack")
+    var selectedMealType by remember { mutableStateOf(MealType.HOMEMADE) }
 
     // Checkbox states for dietary preferences
-    var isVegetarian by remember { mutableStateOf(false) }
-    var isVegan by remember { mutableStateOf(false) }
-    var isGlutenFree by remember { mutableStateOf(false) }
-    var isLowCarb by remember { mutableStateOf(false) }
-    var isLowFat by remember { mutableStateOf(false) }
+    var selectedDietaryPreferences by remember { mutableStateOf(setOf<DietaryPreference>()) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -477,7 +457,7 @@ fun DietLogForm() {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            mealTypes.forEach { mealType ->
+            MealType.values().forEach { mealType ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -490,7 +470,7 @@ fun DietLogForm() {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = mealType,
+                        text = mealType.displayName,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -507,93 +487,37 @@ fun DietLogForm() {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            DietaryPreference.values().toList().chunked(2).forEach { rowPreferences ->
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Checkbox(
-                        checked = isVegetarian,
-                        onCheckedChange = { isVegetarian = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Vegetarian",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isVegan,
-                        onCheckedChange = { isVegan = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Vegan",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isGlutenFree,
-                        onCheckedChange = { isGlutenFree = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Gluten Free",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isLowCarb,
-                        onCheckedChange = { isLowCarb = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Low Carb",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isLowFat,
-                        onCheckedChange = { isLowFat = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Low Fat",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    rowPreferences.forEach { preference ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Checkbox(
+                                checked = selectedDietaryPreferences.contains(preference),
+                                onCheckedChange = { isChecked ->
+                                    selectedDietaryPreferences = if (isChecked) {
+                                        selectedDietaryPreferences + preference
+                                    } else {
+                                        selectedDietaryPreferences - preference
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = preference.displayName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                    // Add empty space if odd number of items in row
+                    if (rowPreferences.size < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -767,16 +691,18 @@ fun DietLogForm() {
                         newFoodName.split(",")
                             .map { it.trim() }
                             .filter { it.isNotBlank() }
-                            .map { FoodItemModel(it, null) }
                     } else {
                         emptyList()
                     }
 
-                    val dietLog = DietLog(
-                        id = "diet_${System.currentTimeMillis()}",
+                    // Create DietLogEntity to save to database
+                    val dietLogEntity = DietLogEntity(
+                        userId = "abc", // TODO: Replace with actual user ID
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
+                        mealType = selectedMealType,
+                        dietaryPreference = selectedDietaryPreferences.toList(),
                         calories = caloriesInt,
                         proteinGrams = proteinFloat,
                         fatGrams = fatFloat,
@@ -784,14 +710,13 @@ fun DietLogForm() {
                         foodItems = parsedFoodItems
                     )
 
-                    // Here you would save to your data store
-                    // For now, just show a success message and reset
-                    notes = ""
-                    calories = ""
-                    protein = ""
-                    fat = ""
-                    carbs = ""
-                    newFoodName = ""
+                    // Save to database
+                    logViewModel.insertDietLog(dietLogEntity)
+
+                    // Navigate to Diary screen
+                    navController?.navigate("diary") {
+                        popUpTo("diary") { inclusive = false }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -824,7 +749,10 @@ fun DietLogForm() {
 }
 
 @Composable
-fun BloodGlucoseLogForm() {
+fun BloodGlucoseLogForm(
+    logViewModel: LogViewModel,
+    navController: androidx.navigation.NavController?
+) {
     var date by remember { mutableStateOf(LocalDate.now()) }
     var time by remember { mutableStateOf(LocalTime.now()) }
     var period by remember { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
@@ -931,18 +859,22 @@ fun BloodGlucoseLogForm() {
                 val glucoseValue = value.toFloatOrNull()
 
                 if (glucoseValue != null && glucoseValue > 0) {
-                    val bloodGlucoseLog = BloodGlucoseLog(
-                        id = "bg_${System.currentTimeMillis()}",
+                    // Create BloodGlucoseLogEntity to save to database
+                    val bloodGlucoseLogEntity = BloodGlucoseLogEntity(
+                        userId = "abc", // TODO: Replace with actual user ID
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
                         value = glucoseValue
                     )
 
-                    // Here you would save to your data store
-                    // For now, just show a success message and reset
-                    notes = ""
-                    value = ""
+                    // Save to database
+                    logViewModel.insertBloodGlucoseLog(bloodGlucoseLogEntity)
+
+                    // Navigate to Diary screen
+                    navController?.navigate("diary") {
+                        popUpTo("diary") { inclusive = false }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -975,7 +907,10 @@ fun BloodGlucoseLogForm() {
 }
 
 @Composable
-fun ExerciseLogForm() {
+fun ExerciseLogForm(
+    logViewModel: LogViewModel,
+    navController: androidx.navigation.NavController?
+) {
     var date by remember { mutableStateOf(LocalDate.now()) }
     var time by remember { mutableStateOf(LocalTime.now()) }
     var period by remember { mutableStateOf(EntryPeriod.MORNING) }
@@ -1164,8 +1099,9 @@ fun ExerciseLogForm() {
                 val durationInt = duration.toIntOrNull()
 
                 if (durationInt != null && durationInt > 0) {
-                    val exerciseLog = ExerciseLog(
-                        id = "exercise_${System.currentTimeMillis()}",
+                    // Create ExerciseLogEntity to save to database
+                    val exerciseLogEntity = ExerciseLogEntity(
+                        userId = "abc", // TODO: Replace with actual user ID
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
@@ -1174,10 +1110,13 @@ fun ExerciseLogForm() {
                         intensity = intensity
                     )
 
-                    // Here you would save to your data store
-                    // For now, just show a success message and reset
-                    notes = ""
-                    duration = ""
+                    // Save to database
+                    logViewModel.insertExerciseLog(exerciseLogEntity)
+
+                    // Navigate to Diary screen
+                    navController?.navigate("diary") {
+                        popUpTo("diary") { inclusive = false }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -1210,7 +1149,10 @@ fun ExerciseLogForm() {
 }
 
 @Composable
-fun MedicationLogForm() {
+fun MedicationLogForm(
+    logViewModel: LogViewModel,
+    navController: androidx.navigation.NavController?
+) {
     var date by remember { mutableStateOf(LocalDate.now()) }
     var time by remember { mutableStateOf(LocalTime.now()) }
     var period by remember { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
@@ -1339,8 +1281,9 @@ fun MedicationLogForm() {
                 val dosageFloat = dosage.toFloatOrNull()
 
                 if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
-                    val medicationLog = MedicationLog(
-                        id = "med_${System.currentTimeMillis()}",
+                    // Create MedicationLogEntity to save to database
+                    val medicationLogEntity = MedicationLogEntity(
+                        userId = "abc", // TODO: Replace with actual user ID
                         dateTime = LocalDateTime.of(date, time),
                         period = period,
                         notes = notes.ifBlank { null },
@@ -1349,12 +1292,13 @@ fun MedicationLogForm() {
                         dosageUnit = dosageUnit
                     )
 
-                    // Here you would save to your data store
-                    // For now, just show a success message and reset
-                    notes = ""
-                    name = ""
-                    dosage = ""
-                    dosageUnit = "mg"
+                    // Save to database
+                    logViewModel.insertMedicationLog(medicationLogEntity)
+
+                    // Navigate to Diary screen
+                    navController?.navigate("diary") {
+                        popUpTo("diary") { inclusive = false }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),

@@ -1,6 +1,5 @@
 package com.example.fit5046_app
 
-import DiaryViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -49,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.fit5046_app.model.GlucoseRanges
 import com.example.fit5046_app.model.Log
 import com.example.fit5046_app.model.LogDisplayItem
@@ -80,7 +81,12 @@ fun Preview() {
 
 @Composable
 fun Diary() {
-    val diaryViewModel: DiaryViewModel = viewModel()
+    val context = LocalContext.current
+    val diaryViewModel: DiaryViewModel = viewModel(
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
+            context.applicationContext as android.app.Application
+        )
+    )
     val allLogs by diaryViewModel.getAllLogs().collectAsState(initial = emptyList())
     allLogs.forEach { AndroidLog.d("DEBUG_DIET", it.toString()) }
 
@@ -105,7 +111,7 @@ fun Diary() {
                         when (log.type) {
                             LogType.DIET -> (log as LogDisplayItem.DietItem).foodItems != null &&
                                     log.foodItems!!.any {
-                                        it.name.contains(
+                                        it.contains(
                                             searchInput,
                                             ignoreCase = true
                                         )
@@ -353,7 +359,7 @@ fun DietLogContent(log: LogDisplayItem.DietItem) {
         )
         if (log.foodItems != null && log.foodItems.isNotEmpty()) {
             Text(
-                text = log.foodItems.joinToString { it.name },
+                text = log.foodItems.joinToString { it },
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

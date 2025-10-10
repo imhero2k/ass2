@@ -1,10 +1,9 @@
 package com.example.fit5046_app.model
 
-import BloodGlucoseLogEntity
-import DietLogEntity
-import ExerciseLogEntity
-import FoodItem
-import MedicationLogEntity
+import com.example.fit5046_app.data.BloodGlucoseLogEntity
+import com.example.fit5046_app.data.DietLogEntity
+import com.example.fit5046_app.data.ExerciseLogEntity
+import com.example.fit5046_app.data.MedicationLogEntity
 import java.time.LocalDateTime
 
 enum class LogType(val displayName: String) {
@@ -67,11 +66,6 @@ sealed interface Log {
     companion object
 }
 
-data class FoodItemModel(
-    val name: String,
-    val quantity: String?
-)
-
 data class DietLog(
     override val id: String,
     override val dateTime: LocalDateTime,
@@ -81,9 +75,26 @@ data class DietLog(
     val proteinGrams: Float?,
     val fatGrams: Float?,
     val carbGrams: Float?,
-    val foodItems: List<FoodItemModel>
+    val foodItems: List<String>?
 ) : Log {
     override val type: LogType get() = LogType.DIET
+}
+
+enum class MealType(val displayName: String) {
+    HOMEMADE("Homemade"),
+    RESTAURANT("Restaurant"),
+    TAKEOUT("Takeout"),
+    FAST_FOOD("Fast Food"),
+    OTHER("Other")
+}
+
+enum class DietaryPreference(val displayName: String) {
+    VEGETARIAN("Vegetarian"),
+    VEGAN("Vegan"),
+    GLUTEN_FREE("Gluten-Free"),
+    LOW_CARB("Low-Carb"),
+    LOW_FAT("Low-Fat"),
+    OTHER("Other")
 }
 
 data class BloodGlucoseLog(
@@ -138,7 +149,7 @@ sealed class LogDisplayItem {
         val proteinGrams: Float?,
         val fatGrams: Float?,
         val carbGrams: Float?,
-        val foodItems: List<FoodItem>?
+        val foodItems: List<String>?
     ) : LogDisplayItem() {
         override val type = LogType.DIET
     }

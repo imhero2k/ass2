@@ -1,9 +1,9 @@
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+package com.example.fit5046_app
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.fit5046_app.model.LogDisplayItem
+import kotlinx.coroutines.flow.Flow
 
 
 class DiaryViewModel(application: Application) : AndroidViewModel(application) {

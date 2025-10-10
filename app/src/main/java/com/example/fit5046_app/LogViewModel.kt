@@ -1,4 +1,10 @@
+package com.example.fit5046_app
+
 import android.app.Application
+import com.example.fit5046_app.data.BloodGlucoseLogEntity
+import com.example.fit5046_app.data.DietLogEntity
+import com.example.fit5046_app.data.ExerciseLogEntity
+import com.example.fit5046_app.data.MedicationLogEntity
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +18,6 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun insertDietLog(dietLog: DietLogEntity) = viewModelScope.launch(Dispatchers.IO) {
-        println("Inserting diet log: $dietLog")
         repository.insertDietLog(dietLog)
     }
 
@@ -20,5 +25,15 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertBloodGlucoseLog(bloodGlucoseLog)
         }
+
+    fun insertExerciseLog(exerciseLog: ExerciseLogEntity) = viewModelScope.launch(Dispatchers.IO) {
+        repository.insertExerciseLog(exerciseLog)
+    }
+
+    fun insertMedicationLog(medicationLog: MedicationLogEntity) =
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.insertMedicationLog(medicationLog)
+        }
+
 
 }

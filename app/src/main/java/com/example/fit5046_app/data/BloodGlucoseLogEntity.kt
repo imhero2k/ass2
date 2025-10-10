@@ -1,3 +1,5 @@
+package com.example.fit5046_app.data
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.fit5046_app.model.EntryPeriod

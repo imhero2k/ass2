@@ -176,7 +176,7 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
             ) {
                 composable(Destination.DASHBOARD.route) { Dashboard() }
                 composable(Destination.DIARY.route) { Diary() }
-                composable(Destination.LOG.route) { Log() }
+                composable(Destination.LOG.route) { Log(navController) }
                 composable(Destination.REPORTS.route) { Reports() }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }
                 composable(Destination.USERSETTING.route) {
