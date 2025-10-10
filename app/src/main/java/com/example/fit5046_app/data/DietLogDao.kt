@@ -16,6 +16,9 @@ interface DietLogDao {
     @Query("SELECT * FROM diet_logs ORDER BY dateTime DESC")
     fun getAllLogs(): Flow<List<DietLogEntity>>
 
+    @Query("SELECT * FROM diet_logs WHERE id = :logId LIMIT 1")
+    suspend fun getLogById(logId: Int): DietLogEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: DietLogEntity)
 

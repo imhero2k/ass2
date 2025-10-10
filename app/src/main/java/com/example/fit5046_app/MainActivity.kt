@@ -37,10 +37,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -93,7 +95,7 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentScreen =
-        Destination.entries.find { it.route == navBackStackEntry?.destination?.route }
+        Destination.entries.find { navBackStackEntry?.destination?.route?.startsWith(it.route) == true }
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -118,14 +120,16 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Destination.entries.forEach { destination ->
                     NavigationRailItem(
-                        selected = currentDestination?.route == destination.route,
+                        selected = currentDestination?.route?.startsWith(destination.route) == true,
                         onClick = {
+                            // Navigate to the destination with clean state
                             navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                                // Pop everything up to and including the current destination
+                                popUpTo(0) {
+                                    inclusive = false
                                 }
+                                // Avoid multiple copies of the same destination
                                 launchSingleTop = true
-                                restoreState = true
                             }
                             scope.launch { drawerState.close() }
                         },
@@ -147,7 +151,7 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 TopAppBar(
                     title = {
                         Text(
-                            text = currentScreen?.label ?: "My Sugar",
+                            text = currentScreen?.label ?: "Glucose Diary",
                             style = MaterialTheme.typography.titleLarge
                         )
                     },
@@ -175,8 +179,20 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Destination.DASHBOARD.route) { Dashboard() }
-                composable(Destination.DIARY.route) { Diary() }
-                composable(Destination.LOG.route) { Log(navController) }
+                composable(Destination.DIARY.route) { Diary(navController) }
+                composable(
+                    route = "log?dietLogId={dietLogId}",
+                    arguments = listOf(
+                        navArgument("dietLogId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                            nullable = false
+                        }
+                    )
+                ) { backStackEntry ->
+                    val dietLogId = backStackEntry.arguments?.getInt("dietLogId") ?: -1
+                    Log(navController, dietLogId = if (dietLogId != -1) dietLogId else null)
+                }
                 composable(Destination.REPORTS.route) { Reports() }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }
                 composable(Destination.USERSETTING.route) {

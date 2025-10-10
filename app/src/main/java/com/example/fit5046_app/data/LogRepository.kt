@@ -35,21 +35,30 @@ class LogRepository(application: Application) {
 
     // ----- Diet Log Operations -----
     fun getAllDietLogs(): Flow<List<DietLogEntity>> = dietLogDao.getAllLogs()
+    suspend fun getDietLogById(logId: Int): DietLogEntity? = dietLogDao.getLogById(logId)
     suspend fun insertDietLog(log: DietLogEntity) = dietLogDao.insert(log)
+    suspend fun updateDietLog(log: DietLogEntity) = dietLogDao.update(log)
+    suspend fun deleteDietLog(log: DietLogEntity) = dietLogDao.delete(log)
 
     // ----- Blood Glucose Log Operations -----
     fun getAllBloodGlucoseLogs(): Flow<List<BloodGlucoseLogEntity>> =
         bloodGlucoseLogDao.getAllLogs()
 
     suspend fun insertBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.insert(log)
+    suspend fun updateBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.update(log)
+    suspend fun deleteBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.delete(log)
 
     // ----- Exercise Log Operations -----
     fun getAllExerciseLogs(): Flow<List<ExerciseLogEntity>> = exerciseLogDao.getAllLogs()
     suspend fun insertExerciseLog(log: ExerciseLogEntity) = exerciseLogDao.insert(log)
+    suspend fun updateExerciseLog(log: ExerciseLogEntity) = exerciseLogDao.update(log)
+    suspend fun deleteExerciseLog(log: ExerciseLogEntity) = exerciseLogDao.delete(log)
 
     // ----- Medication Log Operations -----
     fun getAllMedicationLogs(): Flow<List<MedicationLogEntity>> = medicationLogDao.getAllLogs()
     suspend fun insertMedicationLog(log: MedicationLogEntity) = medicationLogDao.insert(log)
+    suspend fun updateMedicationLog(log: MedicationLogEntity) = medicationLogDao.update(log)
+    suspend fun deleteMedicationLog(log: MedicationLogEntity) = medicationLogDao.delete(log)
 
 
     // ----- Combine all logs into one feed for diary display -----

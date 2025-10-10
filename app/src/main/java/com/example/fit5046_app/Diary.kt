@@ -1,5 +1,6 @@
 package com.example.fit5046_app
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,7 +81,7 @@ fun Preview() {
 
 
 @Composable
-fun Diary() {
+fun Diary(navController: androidx.navigation.NavController? = null) {
     val context = LocalContext.current
     val diaryViewModel: DiaryViewModel = viewModel(
         factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
@@ -235,7 +236,8 @@ fun Diary() {
                         // Single Day Log Card
                         item {
                             SingleDayLogCard(
-                                logs.sortedByDescending { it.dateTime }
+                                dailyLogs = logs.sortedByDescending { it.dateTime },
+                                navController = navController
                             )
                         }
                     }
@@ -249,7 +251,11 @@ fun Diary() {
 }
 
 @Composable
-fun SingleDayLogCard(dailyLogs: List<LogDisplayItem>, modifier: Modifier = Modifier) {
+fun SingleDayLogCard(
+    dailyLogs: List<LogDisplayItem>, 
+    modifier: Modifier = Modifier,
+    navController: androidx.navigation.NavController? = null
+) {
     if (dailyLogs.isEmpty()) {
         // This case might not be reached if dailyLogs filters out empty dates
         Text(
@@ -270,7 +276,10 @@ fun SingleDayLogCard(dailyLogs: List<LogDisplayItem>, modifier: Modifier = Modif
             modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             dailyLogs.forEachIndexed { index, logEntry ->
-                SingleLogEntryRow(log = logEntry)
+                SingleLogEntryRow(
+                    log = logEntry,
+                    navController = navController
+                )
                 if (index < dailyLogs.size - 1) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
                 }
@@ -281,9 +290,22 @@ fun SingleDayLogCard(dailyLogs: List<LogDisplayItem>, modifier: Modifier = Modif
 }
 
 @Composable
-fun SingleLogEntryRow(log: LogDisplayItem, modifier: Modifier = Modifier) {
+fun SingleLogEntryRow(
+    log: LogDisplayItem, 
+    modifier: Modifier = Modifier,
+    navController: androidx.navigation.NavController? = null
+) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = log.type == LogType.DIET) {
+                // Only Diet logs are editable for now
+                if (log.type == LogType.DIET) {
+                    navController?.navigate("log?dietLogId=${log.id}") {
+                        launchSingleTop = true
+                    }
+                }
+            },
     ) {
         // Left Column for Time
         Text(
