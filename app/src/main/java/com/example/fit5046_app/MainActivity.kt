@@ -179,8 +179,24 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 composable(Destination.LOG.route) { Log() }
                 composable(Destination.REPORTS.route) { Reports() }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }
-                composable(Destination.USERSETTING.route) { UserSetting(authViewModel) }
-
+                composable(Destination.USERSETTING.route) {
+                    UserSetting(
+                        authViewModel = authViewModel,
+                        onNavigateToProfile = { navController.navigate(SubRoutes.USERPROFILE) },
+                        onNavigateToReminders = { navController.navigate(SubRoutes.REMINDERMANAGEMENT) },
+                        onNavigateToAppInfo = { navController.navigate(SubRoutes.APPINFORMATION) }
+                    )
+                }
+                composable(SubRoutes.USERPROFILE) {
+                    UserProfile(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable(SubRoutes.REMINDERMANAGEMENT) {
+                    ReminderManagement(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
