@@ -65,6 +65,14 @@ import com.example.fit5046_app.model.ExerciseType
 import com.example.fit5046_app.model.FoodItemModel
 import com.example.fit5046_app.model.Intensity
 import com.example.fit5046_app.model.MedicationLog
+import com.example.fit5046_app.ui.theme.FoodSearchComponent
+import com.example.fit5046_app.ui.theme.FoodItemWithQuantity
+import com.example.fit5046_app.ui.theme.calculateCalories
+import com.example.fit5046_app.ui.theme.calculateProtein
+import com.example.fit5046_app.ui.theme.calculateCarbs
+import com.example.fit5046_app.ui.theme.calculateFat
+import com.example.fit5046_app.ui.theme.NutritionInfo
+import com.example.fit5046_app.ui.theme.EnhancedNutritionCard
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -336,6 +344,7 @@ fun DietLogForm() {
     var fat by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var newFoodName by remember { mutableStateOf("") }
+    var selectedFoods by remember { mutableStateOf<List<FoodItemWithQuantity>>(emptyList()) }
 
     // Radio button states for meal type
     var selectedMealType by remember { mutableStateOf("Home Cooked") }
@@ -554,11 +563,62 @@ fun DietLogForm() {
             }
         }
 
-        // Nutritional Information
+        // Food Search and Selection
         Text(
-            text = "Nutritional Information",
+            text = "Food Selection",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
+        )
+
+        FoodSearchComponent(
+            selectedFoods = selectedFoods,
+            onFoodSelected = { foodWithQuantity ->
+                selectedFoods = selectedFoods + foodWithQuantity
+            },
+            onFoodRemoved = { foodId ->
+                selectedFoods = selectedFoods.filter { it.food.id != foodId }
+            },
+            onQuantityChanged = { foodId, quantity ->
+                selectedFoods = selectedFoods.map {
+                    if (it.food.id == foodId) {
+                        it.copy(quantity = quantity)
+                    } else {
+                        it
+                    }
+                }
+            },
+            onCustomFoodAdded = { customFood ->
+                selectedFoods = selectedFoods + FoodItemWithQuantity(customFood, 100f)
+            }
+        )
+
+        // Enhanced Auto-calculated Nutritional Information
+        if (selectedFoods.isNotEmpty()) {
+            val totalCalories = selectedFoods.sumOf { calculateCalories(it).toDouble() }.toInt()
+            val totalProtein = selectedFoods.sumOf { calculateProtein(it).toDouble() }.toFloat()
+            val totalCarbs = selectedFoods.sumOf { calculateCarbs(it).toDouble() }.toFloat()
+            val totalFat = selectedFoods.sumOf { calculateFat(it).toDouble() }.toFloat()
+
+            EnhancedNutritionCard(
+                calories = totalCalories,
+                protein = totalProtein,
+                carbs = totalCarbs,
+                fat = totalFat,
+                foodCount = selectedFoods.size
+            )
+        }
+
+        // Manual Nutritional Information Override
+        Text(
+            text = "Manual Nutritional Override (Optional)",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = "Use these fields to override or add to the auto-calculated values",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Row(
@@ -568,16 +628,14 @@ fun DietLogForm() {
             OutlinedTextField(
                 value = calories,
                 onValueChange = { calories = it },
-                label = { Text("Calories *") },
-                modifier = Modifier.weight(1f),
-                isError = calories.isBlank()
+                label = { Text("Additional Calories") },
+                modifier = Modifier.weight(1f)
             )
             OutlinedTextField(
                 value = protein,
                 onValueChange = { protein = it },
-                label = { Text("Protein (g) *") },
-                modifier = Modifier.weight(1f),
-                isError = protein.isBlank()
+                label = { Text("Additional Protein (g)") },
+                modifier = Modifier.weight(1f)
             )
         }
 
@@ -588,16 +646,14 @@ fun DietLogForm() {
             OutlinedTextField(
                 value = fat,
                 onValueChange = { fat = it },
-                label = { Text("Fat (g) *") },
-                modifier = Modifier.weight(1f),
-                isError = fat.isBlank()
+                label = { Text("Additional Fat (g)") },
+                modifier = Modifier.weight(1f)
             )
             OutlinedTextField(
                 value = carbs,
                 onValueChange = { carbs = it },
-                label = { Text("Carbs (g) *") },
-                modifier = Modifier.weight(1f),
-                isError = carbs.isBlank()
+                label = { Text("Additional Carbs (g)") },
+                modifier = Modifier.weight(1f)
             )
         }
 
@@ -711,47 +767,70 @@ fun DietLogForm() {
         // Save Button
         Button(
             onClick = {
-                // Validate and save diet log
-                val caloriesInt = calories.toIntOrNull()
-                val proteinFloat = protein.toFloatOrNull()
-                val fatFloat = fat.toFloatOrNull()
-                val carbsFloat = carbs.toFloatOrNull()
+                // Calculate total nutrition values
+                val autoCalories = if (selectedFoods.isNotEmpty()) {
+                    selectedFoods.sumOf { calculateCalories(it).toDouble() }.toInt()
+                } else 0
+                val autoProtein = if (selectedFoods.isNotEmpty()) {
+                    selectedFoods.sumOf { calculateProtein(it).toDouble() }.toFloat()
+                } else 0f
+                val autoFat = if (selectedFoods.isNotEmpty()) {
+                    selectedFoods.sumOf { calculateFat(it).toDouble() }.toFloat()
+                } else 0f
+                val autoCarbs = if (selectedFoods.isNotEmpty()) {
+                    selectedFoods.sumOf { calculateCarbs(it).toDouble() }.toFloat()
+                } else 0f
 
-                if (caloriesInt != null && proteinFloat != null && fatFloat != null && carbsFloat != null) {
-                    // Parse comma-separated food items
-                    val parsedFoodItems = if (newFoodName.isNotBlank()) {
-                        newFoodName.split(",")
-                            .map { it.trim() }
-                            .filter { it.isNotBlank() }
-                            .map { FoodItemModel(it, null) }
-                    } else {
-                        emptyList()
-                    }
+                // Add manual overrides
+                val additionalCalories = calories.toIntOrNull() ?: 0
+                val additionalProtein = protein.toFloatOrNull() ?: 0f
+                val additionalFat = fat.toFloatOrNull() ?: 0f
+                val additionalCarbs = carbs.toFloatOrNull() ?: 0f
 
-                    val dietLog = DietLog(
-                        id = "diet_${System.currentTimeMillis()}",
-                        dateTime = LocalDateTime.of(date, time),
-                        period = period,
-                        notes = notes.ifBlank { null },
-                        calories = caloriesInt,
-                        proteinGrams = proteinFloat,
-                        fatGrams = fatFloat,
-                        carbGrams = carbsFloat,
-                        foodItems = parsedFoodItems
-                    )
+                val totalCalories = autoCalories + additionalCalories
+                val totalProtein = autoProtein + additionalProtein
+                val totalFat = autoFat + additionalFat
+                val totalCarbs = autoCarbs + additionalCarbs
 
-                    // Here you would save to your data store
-                    // For now, just show a success message and reset
-                    notes = ""
-                    calories = ""
-                    protein = ""
-                    fat = ""
-                    carbs = ""
-                    newFoodName = ""
+                // Parse comma-separated food items (legacy support)
+                val parsedFoodItems = if (newFoodName.isNotBlank()) {
+                    newFoodName.split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                        .map { FoodItemModel(it, null) }
+                } else {
+                    emptyList()
                 }
+
+                // Add selected foods to food items
+                val allFoodItems = parsedFoodItems + selectedFoods.map {
+                    FoodItemModel(it.food.name, it.quantity.toString())
+                }
+
+                val dietLog = DietLog(
+                    id = "diet_${System.currentTimeMillis()}",
+                    dateTime = LocalDateTime.of(date, time),
+                    period = period,
+                    notes = notes.ifBlank { null },
+                    calories = totalCalories,
+                    proteinGrams = totalProtein,
+                    fatGrams = totalFat,
+                    carbGrams = totalCarbs,
+                    foodItems = allFoodItems
+                )
+
+                // Here you would save to your data store
+                // For now, just show a success message and reset
+                notes = ""
+                calories = ""
+                protein = ""
+                fat = ""
+                carbs = ""
+                newFoodName = ""
+                selectedFoods = emptyList()
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = calories.isNotBlank() && protein.isNotBlank() && fat.isNotBlank() && carbs.isNotBlank()
+            enabled = selectedFoods.isNotEmpty() || (calories.isNotBlank() && protein.isNotBlank() && fat.isNotBlank() && carbs.isNotBlank())
         ) {
             Text("Save Diet Log")
         }

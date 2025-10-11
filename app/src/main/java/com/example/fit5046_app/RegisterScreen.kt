@@ -29,10 +29,13 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,16 +49,25 @@ import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 
 @Composable
 fun RegisterScreen(
-    onRegisterClick: () -> Unit = {},
+    onRegisterSuccess: () -> Unit = {},
     onBackClick: () -> Unit = {},
+    onBackToStart: () -> Unit = {},
     onFacebookClick: () -> Unit = {},
     onGoogleClick: () -> Unit = {}
 ) {
+    val authViewModel: AuthViewModel = viewModel()
+    val authState by authViewModel.authState.collectAsState()
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // Handle successful registration
+    if (authState.user != null) {
+        onRegisterSuccess()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -69,13 +81,30 @@ fun RegisterScreen(
                     .padding(vertical = 60.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Register",
-                    modifier = Modifier.padding(top = 20.dp),
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = onBackToStart,
+                        modifier = Modifier.padding(start = 16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Text(
+                        text = "Register",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(56.dp)) // Balance the back button
+                }
             }
 
             Card(
@@ -162,13 +191,29 @@ fun RegisterScreen(
                     Spacer(Modifier.height(32.dp))
 
                     Button(
-                        onClick = onRegisterClick,
+                        onClick = {
+                            authViewModel.signUp(name, email, password)
+                        },
+                        enabled = !authState.isLoading && name.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
                         shape = RoundedCornerShape(50),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
                     ) {
-                        Text("Register", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                        if (authState.isLoading) {
+                            Text("Creating Account...", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                        } else {
+                            Text("Register", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+
+                    // Error message
+                    authState.errorMessage?.let { error ->
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
 
                     Spacer(Modifier.height(32.dp))

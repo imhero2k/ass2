@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -29,10 +31,12 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,15 +54,24 @@ import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 
 @Composable
 fun LoginScreen(
-    onLoginClick: () -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
     onRegisterClick: () -> Unit = {},
     onForgotClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
     onFacebookClick: () -> Unit = {},
     onGoogleClick: () -> Unit = {}
 ) {
+    val authViewModel: AuthViewModel = viewModel()
+    val authState by authViewModel.authState.collectAsState()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // Handle successful login
+    if (authState.user != null) {
+        onLoginSuccess()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -71,13 +84,30 @@ fun LoginScreen(
                 .padding(vertical = 60.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Log In",
-                modifier = Modifier.padding(top = 20.dp),
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.padding(start = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Text(
+                    text = "Log In",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(56.dp)) // Balance the back button
+            }
         }
 
         Card(
@@ -148,13 +178,29 @@ fun LoginScreen(
                 Spacer(Modifier.height(32.dp))
 
                 Button(
-                    onClick = onLoginClick,
+                    onClick = {
+                        authViewModel.signIn(email, password)
+                    },
+                    enabled = !authState.isLoading && email.isNotBlank() && password.isNotBlank(),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                 ) {
-                    Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    if (authState.isLoading) {
+                        Text("Signing In...", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    } else {
+                        Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+
+                // Error message
+                authState.errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
 
                 Spacer(Modifier.height(24.dp))
