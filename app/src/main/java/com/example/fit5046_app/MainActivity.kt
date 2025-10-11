@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -60,27 +61,50 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppContent() {
     var isAuthenticated by remember { mutableStateOf(false) }
+    var showStartingScreen by remember { mutableStateOf(true) }
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
 
     // Check authentication state on app start
     LaunchedEffect(Unit) {
         isAuthenticated = FirebaseAuth.getInstance().currentUser != null
+        if (isAuthenticated) {
+            showStartingScreen = false
+        }
     }
 
     // Listen for auth state changes
     LaunchedEffect(authState.user) {
         isAuthenticated = authState.user != null
+        if (isAuthenticated) {
+            showStartingScreen = false
+        }
     }
 
-    if (isAuthenticated) {
-        ExpandedModalNavigationRail(authViewModel = authViewModel)
-    } else {
-        AuthenticationScreen(
-            onAuthSuccess = {
-                isAuthenticated = true
-            }
-        )
+    when {
+        isAuthenticated -> {
+            ExpandedModalNavigationRail(authViewModel = authViewModel)
+        }
+        showStartingScreen -> {
+            StartingScreen(
+                onStartClick = {
+                    showStartingScreen = false
+                },
+                onLoginClick = {
+                    showStartingScreen = false
+                }
+            )
+        }
+        else -> {
+            AuthenticationScreen(
+                onAuthSuccess = {
+                    isAuthenticated = true
+                },
+                onBackToStart = {
+                    showStartingScreen = true
+                }
+            )
+        }
     }
 }
 

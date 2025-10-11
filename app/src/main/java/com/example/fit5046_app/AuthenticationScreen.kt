@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun AuthenticationScreen(
     onAuthSuccess: () -> Unit,
+    onBackToStart: () -> Unit = {},
     authViewModel: AuthViewModel = viewModel()
 ) {
     var isSignUp by remember { mutableStateOf(false) }
@@ -44,33 +45,27 @@ fun AuthenticationScreen(
             )
         }
         isSignUp -> {
-            SignUpScreen(
-                onSignUpClick = { name, email, password ->
-                    authViewModel.signUp(name, email, password)
-                },
-                onSignInClick = {
+            RegisterScreen(
+                onRegisterSuccess = onAuthSuccess,
+                onBackClick = {
                     isSignUp = false
                     authViewModel.clearError()
                 },
-                isLoading = authState.isLoading,
-                errorMessage = authState.errorMessage
+                onBackToStart = onBackToStart
             )
         }
         else -> {
-            SignInScreen(
-                onSignInClick = { email, password ->
-                    authViewModel.signIn(email, password)
-                },
-                onSignUpClick = {
+            LoginScreen(
+                onLoginSuccess = onAuthSuccess,
+                onRegisterClick = {
                     isSignUp = true
                     authViewModel.clearError()
                 },
-                onForgotPasswordClick = {
+                onForgotClick = {
                     showForgotPassword = true
                     authViewModel.clearError()
                 },
-                isLoading = authState.isLoading,
-                errorMessage = authState.errorMessage
+                onBackClick = onBackToStart
             )
         }
     }
