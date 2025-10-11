@@ -298,12 +298,15 @@ fun SingleLogEntryRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(enabled = log.type == LogType.DIET) {
-                // Only Diet logs are editable for now
-                if (log.type == LogType.DIET) {
-                    navController?.navigate("log?dietLogId=${log.id}") {
-                        launchSingleTop = true
-                    }
+            .clickable(
+                enabled = log.type == LogType.DIET || 
+                         log.type == LogType.BLOOD_GLUCOSE || 
+                         log.type == LogType.EXERCISE ||
+                         log.type == LogType.MEDICATION
+            ) {
+                // Navigate to Log screen with log ID and type
+                navController?.navigate("log?logId=${log.id}&logType=${log.type.name}") {
+                    launchSingleTop = true
                 }
             },
     ) {

@@ -43,19 +43,21 @@ class LogRepository(application: Application) {
     // ----- Blood Glucose Log Operations -----
     fun getAllBloodGlucoseLogs(): Flow<List<BloodGlucoseLogEntity>> =
         bloodGlucoseLogDao.getAllLogs()
-
+    suspend fun getBloodGlucoseLogById(logId: Int): BloodGlucoseLogEntity? = bloodGlucoseLogDao.getLogById(logId)
     suspend fun insertBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.insert(log)
     suspend fun updateBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.update(log)
     suspend fun deleteBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.delete(log)
 
     // ----- Exercise Log Operations -----
     fun getAllExerciseLogs(): Flow<List<ExerciseLogEntity>> = exerciseLogDao.getAllLogs()
+    suspend fun getExerciseLogById(logId: Int): ExerciseLogEntity? = exerciseLogDao.getLogById(logId)
     suspend fun insertExerciseLog(log: ExerciseLogEntity) = exerciseLogDao.insert(log)
     suspend fun updateExerciseLog(log: ExerciseLogEntity) = exerciseLogDao.update(log)
     suspend fun deleteExerciseLog(log: ExerciseLogEntity) = exerciseLogDao.delete(log)
 
     // ----- Medication Log Operations -----
     fun getAllMedicationLogs(): Flow<List<MedicationLogEntity>> = medicationLogDao.getAllLogs()
+    suspend fun getMedicationLogById(logId: Int): MedicationLogEntity? = medicationLogDao.getLogById(logId)
     suspend fun insertMedicationLog(log: MedicationLogEntity) = medicationLogDao.insert(log)
     suspend fun updateMedicationLog(log: MedicationLogEntity) = medicationLogDao.update(log)
     suspend fun deleteMedicationLog(log: MedicationLogEntity) = medicationLogDao.delete(log)

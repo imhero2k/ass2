@@ -79,7 +79,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun Log(
     navController: androidx.navigation.NavController? = null,
-    dietLogId: Int? = null
+    editingLogId: Int? = null,
+    editingLogType: String? = null
 ) {
     val context = LocalContext.current
     val logViewModel: LogViewModel = viewModel(
@@ -92,14 +93,15 @@ fun Log(
     val currentUserId =
         com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
 
-    // Track the editing log ID (can be cleared when form is collapsed)
-    var editingDietLogId by remember { mutableStateOf(dietLogId) }
+    // Track the editing log ID and type (can be cleared when form is collapsed)
+    var currentEditingLogId by remember { mutableStateOf(editingLogId) }
+    var currentEditingLogType by remember { mutableStateOf(editingLogType) }
 
-    // If editing a diet log, expand the diet section automatically
-    var expandedDiet by remember { mutableStateOf(dietLogId != null) }
-    var expandedBloodGlucose by remember { mutableStateOf(false) }
-    var expandedExercise by remember { mutableStateOf(false) }
-    var expandedMedication by remember { mutableStateOf(false) }
+    // If editing a log, expand the corresponding section automatically
+    var expandedDiet by remember { mutableStateOf(editingLogType == "DIET") }
+    var expandedBloodGlucose by remember { mutableStateOf(editingLogType == "BLOOD_GLUCOSE") }
+    var expandedExercise by remember { mutableStateOf(editingLogType == "EXERCISE") }
+    var expandedMedication by remember { mutableStateOf(editingLogType == "MEDICATION") }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -123,9 +125,10 @@ fun Log(
             isExpanded = expandedDiet,
             onToggle = {
                 expandedDiet = !expandedDiet
-                // Clear editing log ID when collapsing to reset form
-                if (!expandedDiet) {
-                    editingDietLogId = null
+                // Clear editing state when collapsing to reset form
+                if (!expandedDiet && currentEditingLogType == "DIET") {
+                    currentEditingLogId = null
+                    currentEditingLogType = null
                 }
             }
         ) {
@@ -133,7 +136,7 @@ fun Log(
                 userId = currentUserId,
                 logViewModel = logViewModel,
                 navController = navController,
-                editingLogId = editingDietLogId
+                editingLogId = if (currentEditingLogType == "DIET") currentEditingLogId else null
             )
         }
 
@@ -145,12 +148,20 @@ fun Log(
             logIcon = painterResource(id = R.drawable.water_drop_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedBloodGlucose,
-            onToggle = { expandedBloodGlucose = !expandedBloodGlucose }
+            onToggle = {
+                expandedBloodGlucose = !expandedBloodGlucose
+                // Clear editing state when collapsing to reset form
+                if (!expandedBloodGlucose && currentEditingLogType == "BLOOD_GLUCOSE") {
+                    currentEditingLogId = null
+                    currentEditingLogType = null
+                }
+            }
         ) {
             BloodGlucoseLogForm(
                 userId = currentUserId,
                 logViewModel = logViewModel,
-                navController = navController
+                navController = navController,
+                editingLogId = if (currentEditingLogType == "BLOOD_GLUCOSE") currentEditingLogId else null
             )
         }
 
@@ -162,12 +173,20 @@ fun Log(
             logIcon = painterResource(id = R.drawable.exercise_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedExercise,
-            onToggle = { expandedExercise = !expandedExercise }
+            onToggle = {
+                expandedExercise = !expandedExercise
+                // Clear editing state when collapsing to reset form
+                if (!expandedExercise && currentEditingLogType == "EXERCISE") {
+                    currentEditingLogId = null
+                    currentEditingLogType = null
+                }
+            }
         ) {
             ExerciseLogForm(
                 userId = currentUserId,
                 logViewModel = logViewModel,
-                navController = navController
+                navController = navController,
+                editingLogId = if (currentEditingLogType == "EXERCISE") currentEditingLogId else null
             )
         }
 
@@ -179,12 +198,20 @@ fun Log(
             logIcon = painterResource(id = R.drawable.med_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedMedication,
-            onToggle = { expandedMedication = !expandedMedication }
+            onToggle = {
+                expandedMedication = !expandedMedication
+                // Clear editing state when collapsing to reset form
+                if (!expandedMedication && currentEditingLogType == "MEDICATION") {
+                    currentEditingLogId = null
+                    currentEditingLogType = null
+                }
+            }
         ) {
             MedicationLogForm(
                 userId = currentUserId,
                 logViewModel = logViewModel,
-                navController = navController
+                navController = navController,
+                editingLogId = if (currentEditingLogType == "MEDICATION") currentEditingLogId else null
             )
         }
     }
@@ -892,13 +919,38 @@ fun DietLogForm(
 fun BloodGlucoseLogForm(
     userId: String,
     logViewModel: LogViewModel,
-    navController: androidx.navigation.NavController?
+    navController: androidx.navigation.NavController?,
+    editingLogId: Int? = null
 ) {
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var time by remember { mutableStateOf(LocalTime.now()) }
-    var period by remember { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
-    var notes by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    var existingLog by remember { mutableStateOf<BloodGlucoseLogEntity?>(null) }
+
+    // Load existing log if editing
+    LaunchedEffect(editingLogId) {
+        if (editingLogId != null) {
+            existingLog = logViewModel.getBloodGlucoseLogById(editingLogId)
+        } else {
+            existingLog = null
+        }
+    }
+
+    // Initialize form fields
+    var date by remember(editingLogId) { mutableStateOf(LocalDate.now()) }
+    var time by remember(editingLogId) { mutableStateOf(LocalTime.now()) }
+    var period by remember(editingLogId) { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
+    var notes by remember(editingLogId) { mutableStateOf("") }
+    var value by remember(editingLogId) { mutableStateOf("") }
+
+    // Populate form fields when data loads
+    LaunchedEffect(existingLog) {
+        existingLog?.let {
+            date = it.dateTime.toLocalDate()
+            time = it.dateTime.toLocalTime()
+            period = it.period
+            notes = it.notes ?: ""
+            value = it.value.toString()
+        }
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -993,35 +1045,100 @@ fun BloodGlucoseLogForm(
             minLines = 3
         )
 
-        // Save Button
-        Button(
-            onClick = {
-                // Validate and save blood glucose log
-                val glucoseValue = value.toFloatOrNull()
+        // Save/Update/Delete Buttons
+        if (editingLogId != null) {
+            existingLog?.let { logToEdit ->
+                // Update Button
+                Button(
+                    onClick = {
+                        val glucoseValue = value.toFloatOrNull()
 
-                if (glucoseValue != null && glucoseValue > 0) {
-                    // Create BloodGlucoseLogEntity to save to database
-                    val bloodGlucoseLogEntity = BloodGlucoseLogEntity(
-                        userId = userId,
-                        dateTime = LocalDateTime.of(date, time),
-                        period = period,
-                        notes = notes.ifBlank { null },
-                        value = glucoseValue
-                    )
+                        if (glucoseValue != null && glucoseValue > 0) {
+                            val updatedLog = logToEdit.copy(
+                                dateTime = LocalDateTime.of(date, time),
+                                period = period,
+                                notes = notes.ifBlank { null },
+                                value = glucoseValue
+                            )
 
-                    // Save to database
-                    logViewModel.insertBloodGlucoseLog(bloodGlucoseLogEntity)
+                            logViewModel.updateBloodGlucoseLog(updatedLog)
+                            android.widget.Toast.makeText(
+                                context,
+                                "Blood glucose log updated successfully",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
 
-                    // Navigate to Diary screen
-                    navController?.navigate("diary") {
-                        popUpTo("diary") { inclusive = false }
-                    }
+                            navController?.navigate("diary") {
+                                popUpTo("log") { inclusive = true }
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = value.isNotBlank() && value.toFloatOrNull() != null
+                ) {
+                    Text("Update Blood Glucose Log")
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = value.isNotBlank() && value.toFloatOrNull() != null
-        ) {
-            Text("Save Blood Glucose Log")
+
+                // Delete Button
+                Button(
+                    onClick = {
+                        logViewModel.deleteBloodGlucoseLog(logToEdit)
+                        android.widget.Toast.makeText(
+                            context,
+                            "Blood glucose log deleted successfully",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+
+                        navController?.navigate("diary") {
+                            popUpTo("log") { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Delete Blood Glucose Log")
+                }
+            }
+        } else {
+            // Save Button (for new logs)
+            Button(
+                onClick = {
+                    // Validate and save blood glucose log
+                    val glucoseValue = value.toFloatOrNull()
+
+                    if (glucoseValue != null && glucoseValue > 0) {
+                        // Create BloodGlucoseLogEntity to save to database
+                        val bloodGlucoseLogEntity = BloodGlucoseLogEntity(
+                            userId = userId,
+                            dateTime = LocalDateTime.of(date, time),
+                            period = period,
+                            notes = notes.ifBlank { null },
+                            value = glucoseValue
+                        )
+
+                        // Save to database
+                        logViewModel.insertBloodGlucoseLog(bloodGlucoseLogEntity)
+
+                        // Show toast
+                        android.widget.Toast.makeText(
+                            context,
+                            "Blood glucose log saved successfully",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Navigate to Diary screen
+                        navController?.navigate("diary") {
+                            popUpTo("log") { inclusive = true }
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = value.isNotBlank() && value.toFloatOrNull() != null
+            ) {
+                Text("Save Blood Glucose Log")
+            }
         }
     }
 
@@ -1051,15 +1168,40 @@ fun BloodGlucoseLogForm(
 fun ExerciseLogForm(
     userId: String,
     logViewModel: LogViewModel,
-    navController: androidx.navigation.NavController?
+    navController: androidx.navigation.NavController?,
+    editingLogId: Int? = null
 ) {
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var time by remember { mutableStateOf(LocalTime.now()) }
-    var period by remember { mutableStateOf(EntryPeriod.MORNING) }
-    var notes by remember { mutableStateOf("") }
-    var duration by remember { mutableStateOf("") }
-    var exerciseType by remember { mutableStateOf(ExerciseType.RUNNING) }
-    var intensity by remember { mutableStateOf(Intensity.MEDIUM) }
+    val context = LocalContext.current
+    var existingLog by remember { mutableStateOf<ExerciseLogEntity?>(null) }
+
+    // Initialize form fields
+    var date by remember(editingLogId) { mutableStateOf(LocalDate.now()) }
+    var time by remember(editingLogId) { mutableStateOf(LocalTime.now()) }
+    var period by remember(editingLogId) { mutableStateOf(EntryPeriod.MORNING) }
+    var notes by remember(editingLogId) { mutableStateOf("") }
+    var duration by remember(editingLogId) { mutableStateOf("") }
+    var exerciseType by remember(editingLogId) { mutableStateOf(ExerciseType.RUNNING) }
+    var intensity by remember(editingLogId) { mutableStateOf(Intensity.MEDIUM) }
+
+    // Load existing log if editing and populate form fields
+    LaunchedEffect(editingLogId) {
+        if (editingLogId != null) {
+            val log = logViewModel.getExerciseLogById(editingLogId)
+            existingLog = log
+            
+            log?.let {
+                date = it.dateTime.toLocalDate()
+                time = it.dateTime.toLocalTime()
+                period = it.period
+                notes = it.notes ?: ""
+                duration = it.durationMinutes.toString()
+                exerciseType = it.exerciseType
+                intensity = it.intensity
+            }
+        } else {
+            existingLog = null
+        }
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -1224,37 +1366,104 @@ fun ExerciseLogForm(
             minLines = 3
         )
 
-        // Save Button
-        Button(
-            onClick = {
-                // Validate and save exercise log
-                val durationInt = duration.toIntOrNull()
+        // Save/Update/Delete Buttons
+        if (editingLogId != null) {
+            existingLog?.let { logToEdit ->
+                // Update Button
+                Button(
+                    onClick = {
+                        val durationInt = duration.toIntOrNull()
 
-                if (durationInt != null && durationInt > 0) {
-                    // Create ExerciseLogEntity to save to database
-                    val exerciseLogEntity = ExerciseLogEntity(
-                        userId = userId,
-                        dateTime = LocalDateTime.of(date, time),
-                        period = period,
-                        notes = notes.ifBlank { null },
-                        durationMinutes = durationInt,
-                        exerciseType = exerciseType,
-                        intensity = intensity
-                    )
+                        if (durationInt != null && durationInt > 0) {
+                            val updatedLog = logToEdit.copy(
+                                dateTime = LocalDateTime.of(date, time),
+                                period = period,
+                                notes = notes.ifBlank { null },
+                                durationMinutes = durationInt,
+                                exerciseType = exerciseType,
+                                intensity = intensity
+                            )
 
-                    // Save to database
-                    logViewModel.insertExerciseLog(exerciseLogEntity)
+                            logViewModel.updateExerciseLog(updatedLog)
+                            android.widget.Toast.makeText(
+                                context,
+                                "Exercise log updated successfully",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
 
-                    // Navigate to Diary screen
-                    navController?.navigate("diary") {
-                        popUpTo("diary") { inclusive = false }
-                    }
+                            navController?.navigate("diary") {
+                                popUpTo("log") { inclusive = true }
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = duration.isNotBlank() && duration.toIntOrNull() != null
+                ) {
+                    Text("Update Exercise Log")
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = duration.isNotBlank() && duration.toIntOrNull() != null
-        ) {
-            Text("Save Exercise Log")
+
+                // Delete Button
+                Button(
+                    onClick = {
+                        logViewModel.deleteExerciseLog(logToEdit)
+                        android.widget.Toast.makeText(
+                            context,
+                            "Exercise log deleted successfully",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+
+                        navController?.navigate("diary") {
+                            popUpTo("log") { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Delete Exercise Log")
+                }
+            }
+        } else {
+            // Save Button (for new logs)
+            Button(
+                onClick = {
+                    // Validate and save exercise log
+                    val durationInt = duration.toIntOrNull()
+
+                    if (durationInt != null && durationInt > 0) {
+                        // Create ExerciseLogEntity to save to database
+                        val exerciseLogEntity = ExerciseLogEntity(
+                            userId = userId,
+                            dateTime = LocalDateTime.of(date, time),
+                            period = period,
+                            notes = notes.ifBlank { null },
+                            durationMinutes = durationInt,
+                            exerciseType = exerciseType,
+                            intensity = intensity
+                        )
+
+                        // Save to database
+                        logViewModel.insertExerciseLog(exerciseLogEntity)
+
+                        // Show toast
+                        android.widget.Toast.makeText(
+                            context,
+                            "Exercise log saved successfully",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Navigate to Diary screen
+                        navController?.navigate("diary") {
+                            popUpTo("log") { inclusive = true }
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = duration.isNotBlank() && duration.toIntOrNull() != null
+            ) {
+                Text("Save Exercise Log")
+            }
         }
     }
 
@@ -1284,15 +1493,40 @@ fun ExerciseLogForm(
 fun MedicationLogForm(
     userId: String,
     logViewModel: LogViewModel,
-    navController: androidx.navigation.NavController?
+    navController: androidx.navigation.NavController?,
+    editingLogId: Int? = null
 ) {
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var time by remember { mutableStateOf(LocalTime.now()) }
-    var period by remember { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
-    var notes by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var dosageUnit by remember { mutableStateOf("mg") }
+    val context = LocalContext.current
+    var existingLog by remember { mutableStateOf<MedicationLogEntity?>(null) }
+
+    // Initialize form fields
+    var date by remember(editingLogId) { mutableStateOf(LocalDate.now()) }
+    var time by remember(editingLogId) { mutableStateOf(LocalTime.now()) }
+    var period by remember(editingLogId) { mutableStateOf(EntryPeriod.BEFORE_BREAKFAST) }
+    var notes by remember(editingLogId) { mutableStateOf("") }
+    var name by remember(editingLogId) { mutableStateOf("") }
+    var dosage by remember(editingLogId) { mutableStateOf("") }
+    var dosageUnit by remember(editingLogId) { mutableStateOf("mg") }
+
+    // Load existing log if editing and populate form fields
+    LaunchedEffect(editingLogId) {
+        if (editingLogId != null) {
+            val log = logViewModel.getMedicationLogById(editingLogId)
+            existingLog = log
+            
+            log?.let {
+                date = it.dateTime.toLocalDate()
+                time = it.dateTime.toLocalTime()
+                period = it.period
+                notes = it.notes ?: ""
+                name = it.name
+                dosage = it.dosage.toString()
+                dosageUnit = it.dosageUnit
+            }
+        } else {
+            existingLog = null
+        }
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -1407,37 +1641,104 @@ fun MedicationLogForm(
             minLines = 3
         )
 
-        // Save Button
-        Button(
-            onClick = {
-                // Validate and save medication log
-                val dosageFloat = dosage.toFloatOrNull()
+        // Save/Update/Delete Buttons
+        if (editingLogId != null) {
+            existingLog?.let { logToEdit ->
+                // Update Button
+                Button(
+                    onClick = {
+                        val dosageFloat = dosage.toFloatOrNull()
 
-                if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
-                    // Create MedicationLogEntity to save to database
-                    val medicationLogEntity = MedicationLogEntity(
-                        userId = userId,
-                        dateTime = LocalDateTime.of(date, time),
-                        period = period,
-                        notes = notes.ifBlank { null },
-                        name = name,
-                        dosage = dosageFloat,
-                        dosageUnit = dosageUnit
-                    )
+                        if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
+                            val updatedLog = logToEdit.copy(
+                                dateTime = LocalDateTime.of(date, time),
+                                period = period,
+                                notes = notes.ifBlank { null },
+                                name = name,
+                                dosage = dosageFloat,
+                                dosageUnit = dosageUnit
+                            )
 
-                    // Save to database
-                    logViewModel.insertMedicationLog(medicationLogEntity)
+                            logViewModel.updateMedicationLog(updatedLog)
+                            android.widget.Toast.makeText(
+                                context,
+                                "Medication log updated successfully",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
 
-                    // Navigate to Diary screen
-                    navController?.navigate("diary") {
-                        popUpTo("diary") { inclusive = false }
-                    }
+                            navController?.navigate("diary") {
+                                popUpTo("log") { inclusive = true }
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = name.isNotBlank() && dosage.isNotBlank() && dosage.toFloatOrNull() != null
+                ) {
+                    Text("Update Medication Log")
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = name.isNotBlank() && dosage.isNotBlank() && dosage.toFloatOrNull() != null
-        ) {
-            Text("Save Medication Log")
+
+                // Delete Button
+                Button(
+                    onClick = {
+                        logViewModel.deleteMedicationLog(logToEdit)
+                        android.widget.Toast.makeText(
+                            context,
+                            "Medication log deleted successfully",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+
+                        navController?.navigate("diary") {
+                            popUpTo("log") { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Delete Medication Log")
+                }
+            }
+        } else {
+            // Save Button (for new logs)
+            Button(
+                onClick = {
+                    // Validate and save medication log
+                    val dosageFloat = dosage.toFloatOrNull()
+
+                    if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
+                        // Create MedicationLogEntity to save to database
+                        val medicationLogEntity = MedicationLogEntity(
+                            userId = userId,
+                            dateTime = LocalDateTime.of(date, time),
+                            period = period,
+                            notes = notes.ifBlank { null },
+                            name = name,
+                            dosage = dosageFloat,
+                            dosageUnit = dosageUnit
+                        )
+
+                        // Save to database
+                        logViewModel.insertMedicationLog(medicationLogEntity)
+
+                        // Show toast
+                        android.widget.Toast.makeText(
+                            context,
+                            "Medication log saved successfully",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Navigate to Diary screen
+                        navController?.navigate("diary") {
+                            popUpTo("log") { inclusive = true }
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = name.isNotBlank() && dosage.isNotBlank() && dosage.toFloatOrNull() != null
+            ) {
+                Text("Save Medication Log")
+            }
         }
     }
 

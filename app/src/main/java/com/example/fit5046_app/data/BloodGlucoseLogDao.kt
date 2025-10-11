@@ -15,6 +15,9 @@ interface BloodGlucoseLogDao {
     @Query("SELECT * FROM blood_glucose_logs ORDER BY dateTime DESC")
     fun getAllLogs(): Flow<List<BloodGlucoseLogEntity>>
 
+    @Query("SELECT * FROM blood_glucose_logs WHERE id = :logId LIMIT 1")
+    suspend fun getLogById(logId: Int): BloodGlucoseLogEntity?
+
     @Insert
     suspend fun insert(log: BloodGlucoseLogEntity)
 

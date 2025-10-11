@@ -16,6 +16,9 @@ interface ExerciseLogDao {
     @Query("SELECT * FROM exercise_logs ORDER BY dateTime DESC")
     fun getAllLogs(): Flow<List<ExerciseLogEntity>>
 
+    @Query("SELECT * FROM exercise_logs WHERE id = :logId LIMIT 1")
+    suspend fun getLogById(logId: Int): ExerciseLogEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: ExerciseLogEntity)
 

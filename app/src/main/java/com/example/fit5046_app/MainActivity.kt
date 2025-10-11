@@ -181,17 +181,27 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 composable(Destination.DASHBOARD.route) { Dashboard() }
                 composable(Destination.DIARY.route) { Diary(navController) }
                 composable(
-                    route = "log?dietLogId={dietLogId}",
+                    route = "log?logId={logId}&logType={logType}",
                     arguments = listOf(
-                        navArgument("dietLogId") {
+                        navArgument("logId") {
                             type = NavType.IntType
                             defaultValue = -1
+                            nullable = false
+                        },
+                        navArgument("logType") {
+                            type = NavType.StringType
+                            defaultValue = ""
                             nullable = false
                         }
                     )
                 ) { backStackEntry ->
-                    val dietLogId = backStackEntry.arguments?.getInt("dietLogId") ?: -1
-                    Log(navController, dietLogId = if (dietLogId != -1) dietLogId else null)
+                    val logId = backStackEntry.arguments?.getInt("logId") ?: -1
+                    val logType = backStackEntry.arguments?.getString("logType") ?: ""
+                    Log(
+                        navController, 
+                        editingLogId = if (logId != -1) logId else null,
+                        editingLogType = logType.ifBlank { null }
+                    )
                 }
                 composable(Destination.REPORTS.route) { Reports() }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }

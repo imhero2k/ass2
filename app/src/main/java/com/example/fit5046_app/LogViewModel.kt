@@ -33,6 +33,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
         repository.insertDietLog(dietLog)
     }
 
+    suspend fun getBloodGlucoseLogById(logId: Int): BloodGlucoseLogEntity? {
+        return repository.getBloodGlucoseLogById(logId)
+    }
+
     fun insertBloodGlucoseLog(bloodGlucoseLog: BloodGlucoseLogEntity) =
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertBloodGlucoseLog(bloodGlucoseLog)
@@ -48,6 +52,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             repository.deleteBloodGlucoseLog(bloodGlucoseLog)
         }
 
+    suspend fun getExerciseLogById(logId: Int): ExerciseLogEntity? {
+        return repository.getExerciseLogById(logId)
+    }
+
     fun insertExerciseLog(exerciseLog: ExerciseLogEntity) = viewModelScope.launch(Dispatchers.IO) {
         repository.insertExerciseLog(exerciseLog)
     }
@@ -58,6 +66,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteExerciseLog(exerciseLog: ExerciseLogEntity) = viewModelScope.launch(Dispatchers.IO) {
         repository.deleteExerciseLog(exerciseLog)
+    }
+
+    suspend fun getMedicationLogById(logId: Int): MedicationLogEntity? {
+        return repository.getMedicationLogById(logId)
     }
 
     fun insertMedicationLog(medicationLog: MedicationLogEntity) =
