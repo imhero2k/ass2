@@ -111,12 +111,6 @@ fun Log(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = "Add New Log Entry",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         // Diet Log Section
         ExpandableLogSection(
             title = "Diet Log",
@@ -304,7 +298,7 @@ fun DatePickerDialog(
             .toInstant().toEpochMilli()
     )
 
-    DatePickerDialog(
+    androidx.compose.material3.DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(
@@ -325,9 +319,13 @@ fun DatePickerDialog(
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
             }
-        }
+        },
+        modifier = Modifier.padding(16.dp)
     ) {
-        DatePicker(state = datePickerState)
+        DatePicker(
+            state = datePickerState,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
     }
 }
 
@@ -427,7 +425,7 @@ fun DietLogForm(
         if (editingLogId != null) {
             val log = logViewModel.getDietLogById(editingLogId)
             existingLog = log
-            
+
             // Populate form fields with loaded data
             log?.let {
                 date = it.dateTime.toLocalDate()
@@ -1012,7 +1010,8 @@ fun BloodGlucoseLogForm(
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = Color.White
             ) {
                 EntryPeriod.entries.forEach { entryPeriod ->
                     DropdownMenuItem(
@@ -1188,7 +1187,7 @@ fun ExerciseLogForm(
         if (editingLogId != null) {
             val log = logViewModel.getExerciseLogById(editingLogId)
             existingLog = log
-            
+
             log?.let {
                 date = it.dateTime.toLocalDate()
                 time = it.dateTime.toLocalTime()
@@ -1342,7 +1341,8 @@ fun ExerciseLogForm(
                 )
                 ExposedDropdownMenu(
                     expanded = intensityExpanded,
-                    onDismissRequest = { intensityExpanded = false }
+                    onDismissRequest = { intensityExpanded = false },
+                    containerColor = Color.White
                 ) {
                     Intensity.entries.forEach { intensityLevel ->
                         DropdownMenuItem(
@@ -1513,7 +1513,7 @@ fun MedicationLogForm(
         if (editingLogId != null) {
             val log = logViewModel.getMedicationLogById(editingLogId)
             existingLog = log
-            
+
             log?.let {
                 date = it.dateTime.toLocalDate()
                 time = it.dateTime.toLocalTime()
@@ -1588,7 +1588,8 @@ fun MedicationLogForm(
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = Color.White
             ) {
                 EntryPeriod.entries.forEach { entryPeriod ->
                     DropdownMenuItem(
