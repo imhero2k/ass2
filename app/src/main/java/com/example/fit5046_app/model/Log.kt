@@ -1,5 +1,9 @@
 package com.example.fit5046_app.model
 
+import com.example.fit5046_app.data.BloodGlucoseLogEntity
+import com.example.fit5046_app.data.DietLogEntity
+import com.example.fit5046_app.data.ExerciseLogEntity
+import com.example.fit5046_app.data.MedicationLogEntity
 import java.time.LocalDateTime
 
 enum class LogType(val displayName: String) {
@@ -58,12 +62,9 @@ sealed interface Log {
     val period: EntryPeriod
     val type: LogType
     val notes: String?
-}
 
-data class FoodItemModel(
-    val name: String,
-    val quantity: String?
-)
+    companion object
+}
 
 data class DietLog(
     override val id: String,
@@ -74,9 +75,26 @@ data class DietLog(
     val proteinGrams: Float?,
     val fatGrams: Float?,
     val carbGrams: Float?,
-    val foodItems: List<FoodItemModel>
+    val foodItems: List<String>?
 ) : Log {
     override val type: LogType get() = LogType.DIET
+}
+
+enum class MealType(val displayName: String) {
+    HOMEMADE("Homemade"),
+    RESTAURANT("Restaurant"),
+    TAKEOUT("Takeout"),
+    FAST_FOOD("Fast Food"),
+    OTHER("Other")
+}
+
+enum class DietaryPreference(val displayName: String) {
+    VEGETARIAN("Vegetarian"),
+    VEGAN("Vegan"),
+    GLUTEN_FREE("Gluten-Free"),
+    LOW_CARB("Low-Carb"),
+    LOW_FAT("Low-Fat"),
+    OTHER("Other")
 }
 
 data class BloodGlucoseLog(
@@ -112,6 +130,107 @@ data class MedicationLog(
 ) : Log {
     override val type: LogType get() = LogType.MEDICATION
 }
+
+// ----- Log Item Models for Displaying in the Diary -----
+
+sealed class LogDisplayItem {
+    abstract val id: Int
+    abstract val dateTime: LocalDateTime
+    abstract val type: LogType
+    abstract val period: EntryPeriod
+    abstract val notes: String?
+
+    data class DietItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val calories: Int?,
+        val proteinGrams: Float?,
+        val fatGrams: Float?,
+        val carbGrams: Float?,
+        val foodItems: List<String>?
+    ) : LogDisplayItem() {
+        override val type = LogType.DIET
+    }
+
+    data class GlucoseItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val value: Float
+    ) : LogDisplayItem() {
+        override val type = LogType.BLOOD_GLUCOSE
+    }
+
+    data class ExerciseItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val exerciseType: ExerciseType,
+        val durationMinutes: Int,
+        val intensity: Intensity
+    ) : LogDisplayItem() {
+        override val type = LogType.EXERCISE
+    }
+
+    data class MedicationItem(
+        override val id: Int,
+        override val dateTime: LocalDateTime,
+        override val period: EntryPeriod,
+        override val notes: String?,
+        val name: String,
+        val dosage: Float,
+        val dosageUnit: String
+    ) : LogDisplayItem() {
+        override val type = LogType.MEDICATION
+    }
+}
+
+fun BloodGlucoseLogEntity.toDisplayItem(): LogDisplayItem = LogDisplayItem.GlucoseItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    value = value
+)
+
+fun MedicationLogEntity.toDisplayItem() = LogDisplayItem.MedicationItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    name = name,
+    dosage = dosage,
+    dosageUnit = dosageUnit
+)
+
+fun DietLogEntity.toDisplayItem(): LogDisplayItem = LogDisplayItem.DietItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    calories = calories,
+    proteinGrams = proteinGrams,
+    fatGrams = fatGrams,
+    carbGrams = carbGrams,
+    foodItems = foodItems
+)
+
+fun ExerciseLogEntity.toDisplayItem() = LogDisplayItem.ExerciseItem(
+    id = id,
+    dateTime = dateTime,
+    period = period,
+    notes = notes,
+    exerciseType = exerciseType,
+    durationMinutes = durationMinutes,
+    intensity = intensity
+)
+
+
+
 
 
 

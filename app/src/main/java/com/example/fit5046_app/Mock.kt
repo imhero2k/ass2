@@ -5,7 +5,6 @@ import com.example.fit5046_app.model.DietLog
 import com.example.fit5046_app.model.EntryPeriod
 import com.example.fit5046_app.model.ExerciseLog
 import com.example.fit5046_app.model.ExerciseType
-import com.example.fit5046_app.model.FoodItemModel
 import com.example.fit5046_app.model.Intensity
 import com.example.fit5046_app.model.Log
 import com.example.fit5046_app.model.MedicationLog
@@ -31,10 +30,7 @@ fun getMockLogs(): List<Log> {
             proteinGrams = 15f,
             fatGrams = 10f,
             carbGrams = 70f,
-            foodItems = listOf(
-                FoodItemModel(name = "Oatmeal", quantity = "1 cup"),
-                FoodItemModel(name = "Berries", quantity = "1/2 cup")
-            )
+            foodItems = listOf("Oatmeal", "Berries")
         ),
         BloodGlucoseLog(
             id = "bg_yesterday_1",
@@ -96,10 +92,7 @@ fun getMockLogs(): List<Log> {
             proteinGrams = 30f,
             fatGrams = 20f,
             carbGrams = 55f,
-            foodItems = listOf(
-                FoodItemModel(name = "Chicken Sandwich", quantity = "1"),
-                FoodItemModel(name = "Apple", quantity = "1 medium")
-            )
+            foodItems = listOf("Chicken Sandwich", "Apple")
         ),
         BloodGlucoseLog(
             id = "bg_today_1",
