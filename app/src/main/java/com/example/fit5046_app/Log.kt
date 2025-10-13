@@ -4,18 +4,7 @@ package com.example.fit5046_app
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -23,60 +12,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.fit5046_app.model.BloodGlucoseLog
-import com.example.fit5046_app.model.DietLog
-import com.example.fit5046_app.model.EntryPeriod
-import com.example.fit5046_app.model.ExerciseLog
-import com.example.fit5046_app.model.ExerciseType
-import com.example.fit5046_app.model.FoodItemModel
-import com.example.fit5046_app.model.Intensity
-import com.example.fit5046_app.model.MedicationLog
-import com.example.fit5046_app.ui.theme.FoodSearchComponent
-import com.example.fit5046_app.ui.theme.FoodItemWithQuantity
-import com.example.fit5046_app.ui.theme.calculateCalories
-import com.example.fit5046_app.ui.theme.calculateProtein
-import com.example.fit5046_app.ui.theme.calculateCarbs
-import com.example.fit5046_app.ui.theme.calculateFat
-import com.example.fit5046_app.ui.theme.NutritionInfo
-import com.example.fit5046_app.ui.theme.EnhancedNutritionCard
+import com.example.fit5046_app.model.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,23 +35,21 @@ fun Log() {
     var expandedMedication by remember { mutableStateOf(false) }
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = "Add New Log Entry",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
         // Diet Log Section
         ExpandableLogSection(
             title = "Diet Log",
-            logIcon = painterResource(id = R.drawable.diet_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedDiet,
             onToggle = { expandedDiet = !expandedDiet }
@@ -111,12 +57,11 @@ fun Log() {
             DietLogForm()
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Blood Glucose Log Section
         ExpandableLogSection(
             title = "Blood Glucose Log",
-            logIcon = painterResource(id = R.drawable.water_drop_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedBloodGlucose,
             onToggle = { expandedBloodGlucose = !expandedBloodGlucose }
@@ -124,12 +69,11 @@ fun Log() {
             BloodGlucoseLogForm()
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Exercise Log Section
         ExpandableLogSection(
             title = "Exercise Log",
-            logIcon = painterResource(id = R.drawable.exercise_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedExercise,
             onToggle = { expandedExercise = !expandedExercise }
@@ -137,12 +81,11 @@ fun Log() {
             ExerciseLogForm()
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Medication Log Section
         ExpandableLogSection(
             title = "Medication Log",
-            logIcon = painterResource(id = R.drawable.med_24px),
             icon = Icons.Default.Add,
             isExpanded = expandedMedication,
             onToggle = { expandedMedication = !expandedMedication }
@@ -155,7 +98,6 @@ fun Log() {
 @Composable
 fun ExpandableLogSection(
     title: String,
-    logIcon: Painter,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isExpanded: Boolean,
     onToggle: () -> Unit,
@@ -168,10 +110,7 @@ fun ExpandableLogSection(
     )
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
@@ -179,26 +118,15 @@ fun ExpandableLogSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = logIcon,
-                        contentDescription = "Log Type Icon",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
 
                 IconButton(
                     onClick = onToggle,
@@ -234,8 +162,7 @@ fun DatePickerDialog(
     onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date.atStartOfDay().atZone(java.time.ZoneId.systemDefault())
-            .toInstant().toEpochMilli()
+        initialSelectedDateMillis = date.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     )
 
     DatePickerDialog(
@@ -344,18 +271,6 @@ fun DietLogForm() {
     var fat by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var newFoodName by remember { mutableStateOf("") }
-    var selectedFoods by remember { mutableStateOf<List<FoodItemWithQuantity>>(emptyList()) }
-
-    // Radio button states for meal type
-    var selectedMealType by remember { mutableStateOf("Home Cooked") }
-    val mealTypes = listOf("Home Cooked", "Restaurant", "Takeout", "Fast Food", "Snack")
-
-    // Checkbox states for dietary preferences
-    var isVegetarian by remember { mutableStateOf(false) }
-    var isVegan by remember { mutableStateOf(false) }
-    var isGlutenFree by remember { mutableStateOf(false) }
-    var isLowCarb by remember { mutableStateOf(false) }
-    var isLowFat by remember { mutableStateOf(false) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -377,7 +292,7 @@ fun DietLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(0.6f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -389,7 +304,7 @@ fun DietLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(0.4f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
@@ -417,8 +332,7 @@ fun DietLogForm() {
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false },
-                containerColor = Color.White
+                onDismissRequest = { expanded = false }
             ) {
                 EntryPeriod.values().forEach { entryPeriod ->
                     DropdownMenuItem(
@@ -432,193 +346,11 @@ fun DietLogForm() {
             }
         }
 
-        // Meal Type Selection (Radio Buttons)
+        // Nutritional Information
         Text(
-            text = "Meal Type",
+            text = "Nutritional Information",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
-        )
-
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            mealTypes.forEach { mealType ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = selectedMealType == mealType,
-                        onClick = { selectedMealType = mealType }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = mealType,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-
-        // Dietary Preferences (Checkboxes)
-        Text(
-            text = "Dietary Preferences",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isVegetarian,
-                        onCheckedChange = { isVegetarian = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Vegetarian",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isVegan,
-                        onCheckedChange = { isVegan = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Vegan",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isGlutenFree,
-                        onCheckedChange = { isGlutenFree = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Gluten Free",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isLowCarb,
-                        onCheckedChange = { isLowCarb = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Low Carb",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Checkbox(
-                        checked = isLowFat,
-                        onCheckedChange = { isLowFat = it }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Low Fat",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-
-        // Food Search and Selection
-        Text(
-            text = "Food Selection",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        FoodSearchComponent(
-            selectedFoods = selectedFoods,
-            onFoodSelected = { foodWithQuantity ->
-                selectedFoods = selectedFoods + foodWithQuantity
-            },
-            onFoodRemoved = { foodId ->
-                selectedFoods = selectedFoods.filter { it.food.id != foodId }
-            },
-            onQuantityChanged = { foodId, quantity ->
-                selectedFoods = selectedFoods.map {
-                    if (it.food.id == foodId) {
-                        it.copy(quantity = quantity)
-                    } else {
-                        it
-                    }
-                }
-            },
-            onCustomFoodAdded = { customFood ->
-                selectedFoods = selectedFoods + FoodItemWithQuantity(customFood, 100f)
-            }
-        )
-
-        // Enhanced Auto-calculated Nutritional Information
-        if (selectedFoods.isNotEmpty()) {
-            val totalCalories = selectedFoods.sumOf { calculateCalories(it).toDouble() }.toInt()
-            val totalProtein = selectedFoods.sumOf { calculateProtein(it).toDouble() }.toFloat()
-            val totalCarbs = selectedFoods.sumOf { calculateCarbs(it).toDouble() }.toFloat()
-            val totalFat = selectedFoods.sumOf { calculateFat(it).toDouble() }.toFloat()
-
-            EnhancedNutritionCard(
-                calories = totalCalories,
-                protein = totalProtein,
-                carbs = totalCarbs,
-                fat = totalFat,
-                foodCount = selectedFoods.size
-            )
-        }
-
-        // Manual Nutritional Information Override
-        Text(
-            text = "Manual Nutritional Override (Optional)",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "Use these fields to override or add to the auto-calculated values",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Row(
@@ -628,14 +360,16 @@ fun DietLogForm() {
             OutlinedTextField(
                 value = calories,
                 onValueChange = { calories = it },
-                label = { Text("Additional Calories") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Calories *") },
+                modifier = Modifier.weight(1f),
+                isError = calories.isBlank()
             )
             OutlinedTextField(
                 value = protein,
                 onValueChange = { protein = it },
-                label = { Text("Additional Protein (g)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Protein (g) *") },
+                modifier = Modifier.weight(1f),
+                isError = protein.isBlank()
             )
         }
 
@@ -646,14 +380,16 @@ fun DietLogForm() {
             OutlinedTextField(
                 value = fat,
                 onValueChange = { fat = it },
-                label = { Text("Additional Fat (g)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Fat (g) *") },
+                modifier = Modifier.weight(1f),
+                isError = fat.isBlank()
             )
             OutlinedTextField(
                 value = carbs,
                 onValueChange = { carbs = it },
-                label = { Text("Additional Carbs (g)") },
-                modifier = Modifier.weight(1f)
+                label = { Text("Carbs (g) *") },
+                modifier = Modifier.weight(1f),
+                isError = carbs.isBlank()
             )
         }
 
@@ -767,70 +503,47 @@ fun DietLogForm() {
         // Save Button
         Button(
             onClick = {
-                // Calculate total nutrition values
-                val autoCalories = if (selectedFoods.isNotEmpty()) {
-                    selectedFoods.sumOf { calculateCalories(it).toDouble() }.toInt()
-                } else 0
-                val autoProtein = if (selectedFoods.isNotEmpty()) {
-                    selectedFoods.sumOf { calculateProtein(it).toDouble() }.toFloat()
-                } else 0f
-                val autoFat = if (selectedFoods.isNotEmpty()) {
-                    selectedFoods.sumOf { calculateFat(it).toDouble() }.toFloat()
-                } else 0f
-                val autoCarbs = if (selectedFoods.isNotEmpty()) {
-                    selectedFoods.sumOf { calculateCarbs(it).toDouble() }.toFloat()
-                } else 0f
+                // Validate and save diet log
+                val caloriesInt = calories.toIntOrNull()
+                val proteinFloat = protein.toFloatOrNull()
+                val fatFloat = fat.toFloatOrNull()
+                val carbsFloat = carbs.toFloatOrNull()
 
-                // Add manual overrides
-                val additionalCalories = calories.toIntOrNull() ?: 0
-                val additionalProtein = protein.toFloatOrNull() ?: 0f
-                val additionalFat = fat.toFloatOrNull() ?: 0f
-                val additionalCarbs = carbs.toFloatOrNull() ?: 0f
+                if (caloriesInt != null && proteinFloat != null && fatFloat != null && carbsFloat != null) {
+                    // Parse comma-separated food items
+                    val parsedFoodItems = if (newFoodName.isNotBlank()) {
+                        newFoodName.split(",")
+                            .map { it.trim() }
+                            .filter { it.isNotBlank() }
+                            .map { FoodItemModel(it, null) }
+                    } else {
+                        emptyList()
+                    }
 
-                val totalCalories = autoCalories + additionalCalories
-                val totalProtein = autoProtein + additionalProtein
-                val totalFat = autoFat + additionalFat
-                val totalCarbs = autoCarbs + additionalCarbs
+                    val dietLog = DietLog(
+                        id = "diet_${System.currentTimeMillis()}",
+                        dateTime = LocalDateTime.of(date, time),
+                        period = period,
+                        notes = notes.ifBlank { null },
+                        calories = caloriesInt,
+                        proteinGrams = proteinFloat,
+                        fatGrams = fatFloat,
+                        carbGrams = carbsFloat,
+                        foodItems = parsedFoodItems
+                    )
 
-                // Parse comma-separated food items (legacy support)
-                val parsedFoodItems = if (newFoodName.isNotBlank()) {
-                    newFoodName.split(",")
-                        .map { it.trim() }
-                        .filter { it.isNotBlank() }
-                        .map { FoodItemModel(it, null) }
-                } else {
-                    emptyList()
+                    // Here you would save to your data store
+                    // For now, just show a success message and reset
+                    notes = ""
+                    calories = ""
+                    protein = ""
+                    fat = ""
+                    carbs = ""
+                    newFoodName = ""
                 }
-
-                // Add selected foods to food items
-                val allFoodItems = parsedFoodItems + selectedFoods.map {
-                    FoodItemModel(it.food.name, it.quantity.toString())
-                }
-
-                val dietLog = DietLog(
-                    id = "diet_${System.currentTimeMillis()}",
-                    dateTime = LocalDateTime.of(date, time),
-                    period = period,
-                    notes = notes.ifBlank { null },
-                    calories = totalCalories,
-                    proteinGrams = totalProtein,
-                    fatGrams = totalFat,
-                    carbGrams = totalCarbs,
-                    foodItems = allFoodItems
-                )
-
-                // Here you would save to your data store
-                // For now, just show a success message and reset
-                notes = ""
-                calories = ""
-                protein = ""
-                fat = ""
-                carbs = ""
-                newFoodName = ""
-                selectedFoods = emptyList()
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = selectedFoods.isNotEmpty() || (calories.isNotBlank() && protein.isNotBlank() && fat.isNotBlank() && carbs.isNotBlank())
+            enabled = calories.isNotBlank() && protein.isNotBlank() && fat.isNotBlank() && carbs.isNotBlank()
         ) {
             Text("Save Diet Log")
         }
@@ -886,7 +599,7 @@ fun BloodGlucoseLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(0.6f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -898,7 +611,7 @@ fun BloodGlucoseLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(0.4f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
@@ -1019,16 +732,6 @@ fun ExerciseLogForm() {
     var exerciseType by remember { mutableStateOf(ExerciseType.RUNNING) }
     var intensity by remember { mutableStateOf(Intensity.MEDIUM) }
 
-    // Radio button states for exercise location
-    var selectedLocation by remember { mutableStateOf("Indoor") }
-    val locations = listOf("Indoor", "Outdoor", "Gym", "Home", "Pool")
-
-    // Checkbox states for exercise characteristics
-    var withTrainer by remember { mutableStateOf(false) }
-    var withMusic by remember { mutableStateOf(false) }
-    var withGroup by remember { mutableStateOf(false) }
-    var feltGood by remember { mutableStateOf(false) }
-
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -1049,7 +752,7 @@ fun ExerciseLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(0.6f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -1061,7 +764,7 @@ fun ExerciseLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(0.4f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
@@ -1089,8 +792,7 @@ fun ExerciseLogForm() {
             )
             ExposedDropdownMenu(
                 expanded = periodExpanded,
-                onDismissRequest = { periodExpanded = false },
-                containerColor = Color.White
+                onDismissRequest = { periodExpanded = false }
             ) {
                 EntryPeriod.values().forEach { entryPeriod ->
                     DropdownMenuItem(
@@ -1122,8 +824,7 @@ fun ExerciseLogForm() {
             )
             ExposedDropdownMenu(
                 expanded = typeExpanded,
-                onDismissRequest = { typeExpanded = false },
-                containerColor = Color.White
+                onDismissRequest = { typeExpanded = false }
             ) {
                 ExerciseType.values().forEach { type ->
                     DropdownMenuItem(
@@ -1274,7 +975,7 @@ fun MedicationLogForm() {
                 value = date.format(dateFormatter),
                 onValueChange = { },
                 label = { Text("Date") },
-                modifier = Modifier.weight(0.6f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showDatePicker = true }) {
@@ -1286,7 +987,7 @@ fun MedicationLogForm() {
                 value = time.format(timeFormatter),
                 onValueChange = { },
                 label = { Text("Time") },
-                modifier = Modifier.weight(0.4f),
+                modifier = Modifier.weight(1f),
                 readOnly = true,
                 trailingIcon = {
                     TextButton(onClick = { showTimePicker = true }) {
