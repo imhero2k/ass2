@@ -15,9 +15,14 @@ fun AuthenticationScreen(
     val authState by authViewModel.authState.collectAsState()
 
     // Navigate to main app when user is authenticated
-    LaunchedEffect(authState.user) {
-        if (authState.user != null) {
+    // BUT NOT during registration flow - let EnhancedRegisterScreen handle onboarding
+    LaunchedEffect(authState.user, isSignUp) {
+        println("DEBUG: AuthenticationScreen LaunchedEffect triggered: authState.user=${authState.user?.email}, isSignUp=$isSignUp")
+        if (authState.user != null && !isSignUp) {
+            println("DEBUG: AuthenticationScreen calling onAuthSuccess()")
             onAuthSuccess()
+        } else {
+            println("DEBUG: AuthenticationScreen NOT calling onAuthSuccess() - isSignUp=$isSignUp")
         }
     }
 
@@ -45,7 +50,7 @@ fun AuthenticationScreen(
             )
         }
         isSignUp -> {
-            RegisterScreen(
+            EnhancedRegisterScreen(
                 onRegisterSuccess = onAuthSuccess,
                 onBackClick = {
                     isSignUp = false

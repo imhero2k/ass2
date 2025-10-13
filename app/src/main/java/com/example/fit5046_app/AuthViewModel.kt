@@ -38,8 +38,11 @@ class AuthViewModel : ViewModel() {
             _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
 
             try {
-                auth.signInWithEmailAndPassword(email, password).await()
-                _authState.value = _authState.value.copy(isLoading = false)
+                val result = auth.signInWithEmailAndPassword(email, password).await()
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    user = result.user
+                )
             } catch (e: Exception) {
                 _authState.value = _authState.value.copy(
                     isLoading = false,
@@ -63,7 +66,10 @@ class AuthViewModel : ViewModel() {
 
                 result.user?.updateProfile(profileUpdates)?.await()
 
-                _authState.value = _authState.value.copy(isLoading = false)
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    user = result.user
+                )
             } catch (e: Exception) {
                 _authState.value = _authState.value.copy(
                     isLoading = false,

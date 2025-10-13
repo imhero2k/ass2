@@ -73,11 +73,21 @@ fun AppContent() {
         }
     }
 
-    // Listen for auth state changes
+    // Listen for auth state changes - but don't auto-authenticate during registration
     LaunchedEffect(authState.user) {
-        isAuthenticated = authState.user != null
-        if (isAuthenticated) {
-            showStartingScreen = false
+        println("DEBUG: MainActivity LaunchedEffect triggered: authState.user=${authState.user?.email}, isAuthenticated=$isAuthenticated")
+
+        if (authState.user != null) {
+            // User is signed in - but let AuthenticationScreen handle the flow
+            println("DEBUG: MainActivity NOT auto-authenticating - letting AuthenticationScreen handle it")
+            // Don't set isAuthenticated = true here - let AuthenticationScreen handle it
+        } else {
+            // User is signed out
+            if (isAuthenticated) {
+                println("DEBUG: MainActivity setting isAuthenticated = false - user signed out")
+                isAuthenticated = false
+                showStartingScreen = true
+            }
         }
     }
 

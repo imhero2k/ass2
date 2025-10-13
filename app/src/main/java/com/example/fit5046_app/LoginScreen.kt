@@ -58,8 +58,7 @@ fun LoginScreen(
     onRegisterClick: () -> Unit = {},
     onForgotClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onFacebookClick: () -> Unit = {},
-    onGoogleClick: () -> Unit = {}
+    onFacebookClick: () -> Unit = {}
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
@@ -224,50 +223,11 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    HorizontalDivider(Modifier.weight(1f), color = Color.Gray)
-                    Text(
-                        "  Continue with Google  ",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.DarkGray
-                    )
-                    HorizontalDivider(Modifier.weight(1f), color = Color.Gray)
-                }
-
-                Spacer(Modifier.height(24.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        32.dp,
-                        Alignment.CenterHorizontally
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SocialSquare("G", Color(0xFFDB4437), onGoogleClick)
-                }
             }
         }
     }
 }
 
-@Composable
-private fun SocialSquare(letter: String, bg: Color, onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        Surface(
-            modifier = Modifier.size(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            color = bg
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(letter, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
