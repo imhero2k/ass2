@@ -19,5 +19,6 @@ enum class Destination(
 object SubRoutes {
     const val USERPROFILE = "userprofile"
     const val REMINDERMANAGEMENT = "remindermanagement"
+    const val MEDICATIONREMINDERS = "medicationreminders"
     const val APPINFORMATION = "appinformation"
 }

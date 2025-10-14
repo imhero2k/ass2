@@ -249,7 +249,11 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 startDestination = Destination.DASHBOARD.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Destination.DASHBOARD.route) { Dashboard() }
+                composable(Destination.DASHBOARD.route) {
+                    Dashboard(
+                        onNavigateToMedicationReminders = { navController.navigate(SubRoutes.MEDICATIONREMINDERS) }
+                    )
+                }
                 composable(Destination.DIARY.route) { Diary(navController) }
                 composable(
                     route = "log?logId={logId}&logType={logType}",
@@ -291,6 +295,12 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 }
                 composable(SubRoutes.REMINDERMANAGEMENT) {
                     ReminderManagement(
+                        onNavigateBack = { navController.popBackStack() },
+                        onNavigateToMedicationReminders = { navController.navigate(SubRoutes.MEDICATIONREMINDERS) }
+                    )
+                }
+                composable(SubRoutes.MEDICATIONREMINDERS) {
+                    MedicationReminderScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
