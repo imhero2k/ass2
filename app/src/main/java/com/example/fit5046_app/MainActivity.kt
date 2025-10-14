@@ -64,55 +64,92 @@ class MainActivity : ComponentActivity() {
 fun AppContent() {
     var isAuthenticated by remember { mutableStateOf(false) }
     var showStartingScreen by remember { mutableStateOf(true) }
+    var hasCheckedInitialAuth by remember { mutableStateOf(false) }
+    var hasProcessedInitialAuthState by remember { mutableStateOf(false) }
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
 
     // Check authentication state on app start
     LaunchedEffect(Unit) {
-        isAuthenticated = FirebaseAuth.getInstance().currentUser != null
+        println("DEBUG: ===== APP START =====")
+        println("DEBUG: Checking Firebase Auth on app start...")
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        println("DEBUG: Firebase currentUser: ${currentUser?.email ?: "null"}")
+        println("DEBUG: Firebase currentUser UID: ${currentUser?.uid ?: "null"}")
+
+        isAuthenticated = currentUser != null
+        hasCheckedInitialAuth = true
+        println("DEBUG: Setting isAuthenticated = $isAuthenticated")
+        println("DEBUG: Setting hasCheckedInitialAuth = true")
+
         if (isAuthenticated) {
             showStartingScreen = false
+            println("DEBUG: User is authenticated - hiding start screen")
+        } else {
+            println("DEBUG: User is NOT authenticated - will show start screen")
         }
+        println("DEBUG: ===== APP START COMPLETE =====")
     }
 
     // Listen for auth state changes - but don't auto-authenticate during registration
     LaunchedEffect(authState.user) {
-        println("DEBUG: MainActivity LaunchedEffect triggered: authState.user=${authState.user?.email}, isAuthenticated=$isAuthenticated")
+        println("DEBUG: ===== AUTH STATE CHANGE =====")
+        println("DEBUG: authState.user: ${authState.user?.email ?: "null"}")
+        println("DEBUG: authState.user UID: ${authState.user?.uid ?: "null"}")
+        println("DEBUG: Current isAuthenticated: $isAuthenticated")
+        println("DEBUG: Current showStartingScreen: $showStartingScreen")
 
         if (authState.user != null) {
             // User is signed in - but let AuthenticationScreen handle the flow
-            println("DEBUG: MainActivity NOT auto-authenticating - letting AuthenticationScreen handle it")
+            println("DEBUG: User is signed in - letting AuthenticationScreen handle the flow")
             // Don't set isAuthenticated = true here - let AuthenticationScreen handle it
         } else {
-            // User is signed out
-            if (isAuthenticated) {
-                println("DEBUG: MainActivity setting isAuthenticated = false - user signed out")
+            // User is signed out - but only update if we were previously authenticated
+            // Don't override the initial Firebase check
+            if (isAuthenticated && hasCheckedInitialAuth && hasProcessedInitialAuthState) {
+                println("DEBUG: User signed out - updating state")
                 isAuthenticated = false
                 showStartingScreen = true
+            } else {
+                println("DEBUG: User is signed out - but not updating state (initial load or not processed yet)")
+                hasProcessedInitialAuthState = true
             }
         }
+        println("DEBUG: ===== AUTH STATE CHANGE COMPLETE =====")
     }
+
+    // Debug navigation decision
+    println("DEBUG: ===== NAVIGATION DECISION =====")
+    println("DEBUG: isAuthenticated: $isAuthenticated")
+    println("DEBUG: showStartingScreen: $showStartingScreen")
 
     when {
         isAuthenticated -> {
+            println("DEBUG: Navigating to DASHBOARD")
             ExpandedModalNavigationRail(authViewModel = authViewModel)
         }
         showStartingScreen -> {
+            println("DEBUG: Navigating to START SCREEN")
             StartingScreen(
                 onStartClick = {
+                    println("DEBUG: Start button clicked - hiding start screen")
                     showStartingScreen = false
                 },
                 onLoginClick = {
+                    println("DEBUG: Login button clicked - hiding start screen")
                     showStartingScreen = false
                 }
             )
         }
         else -> {
+            println("DEBUG: Navigating to AUTHENTICATION SCREEN")
             AuthenticationScreen(
                 onAuthSuccess = {
+                    println("DEBUG: AuthenticationScreen calling onAuthSuccess()")
                     isAuthenticated = true
                 },
                 onBackToStart = {
+                    println("DEBUG: AuthenticationScreen calling onBackToStart()")
                     showStartingScreen = true
                 }
             )
@@ -232,7 +269,7 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                     val logId = backStackEntry.arguments?.getInt("logId") ?: -1
                     val logType = backStackEntry.arguments?.getString("logType") ?: ""
                     Log(
-                        navController, 
+                        navController,
                         editingLogId = if (logId != -1) logId else null,
                         editingLogType = logType.ifBlank { null }
                     )
