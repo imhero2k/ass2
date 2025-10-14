@@ -117,11 +117,16 @@ object ReportDownloader {
 //        val file = File(dir, fileName)
 
         // --- Save to Public Downloads folder ---
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        if (!downloadsDir.exists()) downloadsDir.mkdirs()
+//        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+//        if (!downloadsDir.exists()) downloadsDir.mkdirs()
+//
+//        val fileName = "Health_Report_${System.currentTimeMillis()}.pdf"
+//        val file = File(downloadsDir, fileName)
+        val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "reports")
+        if (!dir.exists()) dir.mkdirs()
 
         val fileName = "Health_Report_${System.currentTimeMillis()}.pdf"
-        val file = File(downloadsDir, fileName)
+        val file = File(dir, fileName)
 
         return try {
             FileOutputStream(file).use { pdf.writeTo(it) }
