@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -62,27 +63,60 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppContent() {
     var isAuthenticated by remember { mutableStateOf(false) }
+    var showStartingScreen by remember { mutableStateOf(true) }
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
 
     // Check authentication state on app start
     LaunchedEffect(Unit) {
         isAuthenticated = FirebaseAuth.getInstance().currentUser != null
+        if (isAuthenticated) {
+            showStartingScreen = false
+        }
     }
 
-    // Listen for auth state changes
+    // Listen for auth state changes - but don't auto-authenticate during registration
     LaunchedEffect(authState.user) {
-        isAuthenticated = authState.user != null
+        println("DEBUG: MainActivity LaunchedEffect triggered: authState.user=${authState.user?.email}, isAuthenticated=$isAuthenticated")
+
+        if (authState.user != null) {
+            // User is signed in - but let AuthenticationScreen handle the flow
+            println("DEBUG: MainActivity NOT auto-authenticating - letting AuthenticationScreen handle it")
+            // Don't set isAuthenticated = true here - let AuthenticationScreen handle it
+        } else {
+            // User is signed out
+            if (isAuthenticated) {
+                println("DEBUG: MainActivity setting isAuthenticated = false - user signed out")
+                isAuthenticated = false
+                showStartingScreen = true
+            }
+        }
     }
 
-    if (isAuthenticated) {
-        ExpandedModalNavigationRail(authViewModel = authViewModel)
-    } else {
-        AuthenticationScreen(
-            onAuthSuccess = {
-                isAuthenticated = true
-            }
-        )
+    when {
+        isAuthenticated -> {
+            ExpandedModalNavigationRail(authViewModel = authViewModel)
+        }
+        showStartingScreen -> {
+            StartingScreen(
+                onStartClick = {
+                    showStartingScreen = false
+                },
+                onLoginClick = {
+                    showStartingScreen = false
+                }
+            )
+        }
+        else -> {
+            AuthenticationScreen(
+                onAuthSuccess = {
+                    isAuthenticated = true
+                },
+                onBackToStart = {
+                    showStartingScreen = true
+                }
+            )
+        }
     }
 }
 
