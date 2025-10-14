@@ -12,9 +12,10 @@ import androidx.room.TypeConverters
         BloodGlucoseLogEntity::class,
         DietLogEntity::class,
         ExerciseLogEntity::class,
-        MedicationLogEntity::class
+        MedicationLogEntity::class,
+        MedicationReminderEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -26,6 +27,7 @@ abstract class LogDatabase : RoomDatabase() {
     abstract fun exerciseLogDao(): ExerciseLogDao
 
     abstract fun medicationLogDao(): MedicationLogDao
+    abstract fun medicationReminderDao(): MedicationReminderDao
 
     companion object {
         @Volatile
