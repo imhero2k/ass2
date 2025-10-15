@@ -12,12 +12,18 @@ import com.example.fit5046_app.data.MedicationLogDao
 import com.example.fit5046_app.data.MedicationLogEntity
 import com.example.fit5046_app.data.UserDao
 import com.example.fit5046_app.data.UserEntity
+import com.example.fit5046_app.data.SensorDataProvider
 import com.example.fit5046_app.model.LogDisplayItem
 import com.example.fit5046_app.model.toDisplayItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 
-class LogRepository(application: Application) {
+class LogRepository(
+    application: Application,
+    private val dataProvider: SensorDataProvider? = null
+) {
     private val userDao: UserDao = LogDatabase.getDatabase(application).userDao()
     private val dietLogDao: DietLogDao = LogDatabase.getDatabase(application).dietLogDao()
     private val bloodGlucoseLogDao: BloodGlucoseLogDao =
@@ -47,6 +53,13 @@ class LogRepository(application: Application) {
     suspend fun insertBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.insert(log)
     suspend fun updateBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.update(log)
     suspend fun deleteBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.delete(log)
+    // Blood glucose sensor data
+    fun addSensorData(): Flow<BloodGlucoseLogEntity> {
+        return dataProvider?.sensorDataFlow()?.onEach { reading ->
+            // Add each sensor reading to database
+            insertBloodGlucoseLog(reading)
+        } ?: flow { } // return empty flow if no provider
+    }
 
     // ----- Exercise Log Operations -----
     fun getAllExerciseLogs(): Flow<List<ExerciseLogEntity>> = exerciseLogDao.getAllLogs()
