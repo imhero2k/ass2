@@ -21,7 +21,10 @@ private val LightColorScheme = lightColorScheme(
     secondaryContainer = Color(0xFFcdede7),
     background = Color(0xFFf0f0f1), // Light gray for background
     onBackground = Color.DarkGray,
-    surface = Color(0xFFffffff) // White for cards and other surface
+    surface = Color(0xFFffffff), // White for cards and other surface
+    surfaceVariant = Color(0xFFffffff), // White for dropdown menus
+    surfaceContainer = Color(0xFFffffff), // White for containers
+    surfaceContainerHigh = Color(0xFFffffff), // White for elevated containers
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
