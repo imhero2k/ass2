@@ -19,6 +19,9 @@ interface DietLogDao {
     @Query("SELECT * FROM diet_logs WHERE id = :logId LIMIT 1")
     suspend fun getLogById(logId: Int): DietLogEntity?
 
+    @Query("SELECT * FROM diet_logs WHERE userId = :userId AND dateTime BETWEEN :startTime AND :endTime ORDER BY dateTime DESC")
+    suspend fun getLogsInTimeRange(userId: String, startTime: Long, endTime: Long): List<DietLogEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: DietLogEntity)
 

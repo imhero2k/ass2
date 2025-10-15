@@ -9,15 +9,6 @@ import java.time.LocalDateTime
 
 @Entity(
     tableName = "diet_logs"
-//    foreignKeys = [
-//        ForeignKey(
-//            entity = UserEntity::class,
-//            parentColumns = ["id"],
-//            childColumns = ["userId"],
-//            onDelete = ForeignKey.CASCADE
-//        )
-//    ],
-//    indices = [Index("userId")]
 )
 data class DietLogEntity(
     @PrimaryKey(autoGenerate = true)
