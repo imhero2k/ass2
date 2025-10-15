@@ -8,19 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 
-/**
- * Utility class for image processing operations
- */
+
 object ImageUtils {
     
-    /**
-     * Converts a URI to a Bitmap
-     * @param context The application context
-     * @param uri The image URI
-     * @param maxWidth Maximum width for the bitmap (for memory optimization)
-     * @param maxHeight Maximum height for the bitmap (for memory optimization)
-     * @return Bitmap or null if conversion fails
-     */
+    
     suspend fun uriToBitmap(
         context: Context,
         uri: Uri,
@@ -52,10 +43,7 @@ object ImageUtils {
         }
     }
     
-    /**
-     * Calculates the appropriate sample size for bitmap decoding
-     * to reduce memory usage
-     */
+    
     private fun calculateInSampleSize(
         options: BitmapFactory.Options,
         reqWidth: Int,
@@ -77,9 +65,7 @@ object ImageUtils {
         return inSampleSize
     }
     
-    /**
-     * Resizes a bitmap to fit within specified dimensions while maintaining aspect ratio
-     */
+    
     fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
