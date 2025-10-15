@@ -6,6 +6,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,9 +29,11 @@ import androidx.compose.ui.unit.sp
 import com.example.fit5046_app.R
 import com.example.fit5046_app.model.MedicationReminder
 import com.example.fit5046_app.model.ReminderDayOfWeek
+import com.example.fit5046_app.service.OllamaService
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -39,6 +43,7 @@ fun Dashboard(
     val context = LocalContext.current
     var nextReminder by remember { mutableStateOf<MedicationReminder?>(null) }
     var reminderText by remember { mutableStateOf("No upcoming reminders") }
+    var showChatBot by remember { mutableStateOf(false) }
 
     // Load reminders and calculate next one
     LaunchedEffect(Unit) {
@@ -333,6 +338,32 @@ fun Dashboard(
 
         Spacer(Modifier.height(20.dp))
     }
+
+    // Floating Chat Bot Button
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        FloatingActionButton(
+            onClick = { showChatBot = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Icon(
+                Icons.Default.Chat,
+                contentDescription = "Chat Bot",
+                tint = Color.White
+            )
+        }
+    }
+
+    // Chat Bot Dialog
+    if (showChatBot) {
+        ChatBotDialog(
+            onDismiss = { showChatBot = false }
+        )
+    }
 }
 
 @Composable
@@ -470,6 +501,175 @@ private fun getCurrentDayOfWeek(calendarDayOfWeek: Int): ReminderDayOfWeek {
         else -> ReminderDayOfWeek.MONDAY
     }
 }
+
+@Composable
+private fun ChatBotDialog(
+    onDismiss: () -> Unit
+) {
+    var message by remember { mutableStateOf("") }
+    var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Initialize with welcome message
+    LaunchedEffect(Unit) {
+        if (messages.isEmpty()) {
+            messages = listOf(
+                ChatMessage(
+                    text = "Hi! I'm your health assistant. I can help you with medication reminders, health tips, and answer questions about your health journey. How can I help you today?",
+                    isUser = false,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.SmartToy,
+                    contentDescription = "Chat Bot",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Health Assistant")
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp)
+            ) {
+                // Messages
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(messages) { message ->
+                        ChatBubble(message = message)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Input field
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = message,
+                        onValueChange = { message = it },
+                        placeholder = { Text("Type your message...") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = {
+                            if (message.isNotBlank() && !isLoading) {
+                                val userMessage = ChatMessage(
+                                    text = message,
+                                    isUser = true,
+                                    timestamp = System.currentTimeMillis()
+                                )
+                                messages = messages + userMessage
+
+                                val currentMessage = message
+                                message = ""
+                                isLoading = true
+
+                                // Generate bot response using Ollama
+                                coroutineScope.launch {
+                                    try {
+                                        // Test connection first
+                                        val isConnected = OllamaService.testConnection()
+                                        if (!isConnected) {
+                                            val errorMessage = ChatMessage(
+                                                text = "I'm having trouble connecting to my AI brain. Please make sure Ollama is running on your Mac at 0.0.0.0:11434. Using fallback responses for now.",
+                                                isUser = false,
+                                                timestamp = System.currentTimeMillis()
+                                            )
+                                            messages = messages + errorMessage
+                                        } else {
+                                            val botResponse = OllamaService.generateResponse(currentMessage)
+                                            val botMessage = ChatMessage(
+                                                text = botResponse,
+                                                isUser = false,
+                                                timestamp = System.currentTimeMillis()
+                                            )
+                                            messages = messages + botMessage
+                                        }
+                                    } catch (e: Exception) {
+                                        val errorMessage = ChatMessage(
+                                            text = "I'm sorry, I'm having trouble connecting to my AI brain right now. Please make sure Ollama is running on your Mac. Using fallback responses for now.",
+                                            isUser = false,
+                                            timestamp = System.currentTimeMillis()
+                                        )
+                                        messages = messages + errorMessage
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
+                            }
+                        }
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Send, contentDescription = "Send")
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ChatBubble(message: ChatMessage) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start
+    ) {
+        Card(
+            modifier = Modifier.widthIn(max = 280.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (message.isUser)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Text(
+                text = message.text,
+                modifier = Modifier.padding(12.dp),
+                color = if (message.isUser) Color.White else Color.Black
+            )
+        }
+    }
+}
+
+
+data class ChatMessage(
+    val text: String,
+    val isUser: Boolean,
+    val timestamp: Long
+)
 
 @Preview(showBackground = true)
 @Composable
