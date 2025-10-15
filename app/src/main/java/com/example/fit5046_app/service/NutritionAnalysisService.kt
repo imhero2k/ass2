@@ -11,17 +11,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/**
- * Service for analyzing food images and extracting nutritional information
- * Uses Google ML Kit for image labeling
- */
+
 class NutritionAnalysisService {
     
     private val imageLabeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
     
-    /**
-     * Data class representing a detected food item with nutritional information
-     */
+    
     data class FoodItem(
         val name: String,
         val confidence: Float,
@@ -34,9 +29,7 @@ class NutritionAnalysisService {
         val defaultPortionGrams: Int = 100
     )
     
-    /**
-     * Data class representing the complete nutrition analysis result
-     */
+    
     data class NutritionAnalysisResult(
         val foodItems: List<FoodItem>,
         // Totals here are based on defaultPortionGrams per detected item.
@@ -48,11 +41,7 @@ class NutritionAnalysisService {
         val confidence: Float
     )
     
-    /**
-     * Analyzes a bitmap image to detect food items and estimate nutritional values
-     * @param bitmap The image bitmap to analyze
-     * @return NutritionAnalysisResult containing detected foods and nutritional estimates
-     */
+    
     suspend fun analyzeImage(bitmap: Bitmap): Result<NutritionAnalysisResult> = withContext(Dispatchers.IO) {
         try {
             val inputImage = InputImage.fromBitmap(bitmap, 0)
@@ -77,7 +66,7 @@ class NutritionAnalysisService {
                     val foodName = label.text
                     val confidence = label.confidence
                     
-                    // Per-100g reference plus default portion guess
+                    
                     val nutrition = referencePer100g(foodName)
                     
                     FoodItem(
@@ -98,7 +87,7 @@ class NutritionAnalysisService {
                 )
             }
             
-            // Calculate totals using default portions for each item
+            // Calculate 
             val totalCalories = foodItems.fold(0) { acc, item ->
                 val per100 = item.caloriesPer100g ?: 0
                 val grams = item.defaultPortionGrams
@@ -139,9 +128,7 @@ class NutritionAnalysisService {
         }
     }
     
-    /**
-     * Checks if a detected label is food-related
-     */
+    
     private fun isFoodRelated(label: String): Boolean {
         val foodKeywords = listOf(
             "food", "meal", "dish", "plate", "bowl", "cup", "glass",
@@ -158,15 +145,12 @@ class NutritionAnalysisService {
         return foodKeywords.any { keyword -> lowerLabel.contains(keyword) }
     }
     
-    /**
-     * Estimates nutritional values for a given food item
-     * This is a simplified estimation - in a real app, you'd use a comprehensive nutrition database
-     */
+    
     private fun referencePer100g(foodName: String): NutritionData {
         val lowerName = foodName.lowercase()
         
         return when {
-            // Values per 100g (typical USDA references)
+            // Values for reference
             lowerName.contains("apple") -> NutritionData(52, 0.3f, 0.2f, 14.0f, defaultPortionGrams = 150)
             lowerName.contains("banana") -> NutritionData(89, 1.1f, 0.3f, 23.0f, defaultPortionGrams = 120)
             lowerName.contains("orange") -> NutritionData(47, 0.9f, 0.1f, 12.0f, defaultPortionGrams = 130)
@@ -191,24 +175,20 @@ class NutritionAnalysisService {
             lowerName.contains("juice") -> NutritionData(45, 0.5f, 0.1f, 10.0f, defaultPortionGrams = 240)
             lowerName.contains("soda") -> NutritionData(41, 0.0f, 0.0f, 11.0f, defaultPortionGrams = 355)
             lowerName.contains("water") -> NutritionData(0, 0.0f, 0.0f, 0.0f, defaultPortionGrams = 240)
-            else -> NutritionData(100, 5.0f, 3.0f, 15.0f, defaultPortionGrams = 100) // Fallback
+            else -> NutritionData(100, 5.0f, 3.0f, 15.0f, defaultPortionGrams = 100) 
         }
     }
     
-    /**
-     * Data class for nutritional values
-     */
+    
     private data class NutritionData(
-        val calories: Int, // per 100g
-        val protein: Float, // per 100g
-        val fat: Float, // per 100g
-        val carbs: Float, // per 100g
+        val calories: Int, 
+        val protein: Float, 
+        val fat: Float, 
+        val carbs: Float, 
         val defaultPortionGrams: Int
     )
     
-    /**
-     * Clean up resources
-     */
+    
     fun cleanup() {
         imageLabeler.close()
     }
