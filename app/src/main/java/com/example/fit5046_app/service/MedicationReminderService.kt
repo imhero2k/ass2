@@ -27,18 +27,27 @@ class MedicationReminderService {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // For testing, schedule for 1 minute from now
-            val testCalendar = Calendar.getInstance().apply {
-                add(Calendar.MINUTE, 1) // Schedule for 1 minute from now
+            // Schedule for the actual reminder time
+            val reminderCalendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, reminder.hour)
+                set(Calendar.MINUTE, reminder.minute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+
+                // If the time has already passed today, schedule for tomorrow
+                if (timeInMillis <= System.currentTimeMillis()) {
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }
             }
 
-            println("DEBUG: Scheduling alarm for ${reminder.medicationName} at ${testCalendar.time}")
+            println("DEBUG: Scheduling alarm for ${reminder.medicationName} at ${reminderCalendar.time}")
             println("DEBUG: Current time: ${Calendar.getInstance().time}")
+            println("DEBUG: Reminder time: ${reminder.hour}:${reminder.minute}")
 
             // Use setExactAndAllowWhileIdle for more reliable alarms
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                testCalendar.timeInMillis,
+                reminderCalendar.timeInMillis,
                 pendingIntent
             )
         }
