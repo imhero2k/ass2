@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -37,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -128,6 +126,7 @@ fun AppContent() {
             println("DEBUG: Navigating to DASHBOARD")
             ExpandedModalNavigationRail(authViewModel = authViewModel)
         }
+
         showStartingScreen -> {
             println("DEBUG: Navigating to START SCREEN")
             StartingScreen(
@@ -141,6 +140,7 @@ fun AppContent() {
                 }
             )
         }
+
         else -> {
             println("DEBUG: Navigating to AUTHENTICATION SCREEN")
             AuthenticationScreen(
@@ -222,7 +222,7 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 TopAppBar(
                     title = {
                         Text(
-                            text = currentScreen?.label ?: "Glucose Diary",
+                            text = currentScreen?.label ?: "",
                             style = MaterialTheme.typography.titleLarge
                         )
                     },

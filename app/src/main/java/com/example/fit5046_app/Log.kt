@@ -255,7 +255,8 @@ fun ExpandableLogSection(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
