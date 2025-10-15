@@ -8,16 +8,7 @@ import com.example.fit5046_app.model.Intensity
 import java.time.LocalDateTime
 
 @Entity(
-    tableName = "exercise_logs",
-//    foreignKeys = [
-//        ForeignKey(
-//            entity = UserEntity::class,
-//            parentColumns = ["id"],
-//            childColumns = ["userId"],
-//            onDelete = ForeignKey.CASCADE
-//        )
-//    ],
-//    indices = [Index("userId")]
+    tableName = "exercise_logs"
 )
 data class ExerciseLogEntity(
     @PrimaryKey(autoGenerate = true)

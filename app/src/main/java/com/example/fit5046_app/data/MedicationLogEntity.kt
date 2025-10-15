@@ -6,16 +6,7 @@ import com.example.fit5046_app.model.EntryPeriod
 import java.time.LocalDateTime
 
 @Entity(
-    tableName = "medication_logs",
-//    foreignKeys = [
-//        ForeignKey(
-//            entity = UserEntity::class,
-//            parentColumns = ["id"],
-//            childColumns = ["userId"],
-//            onDelete = ForeignKey.CASCADE
-//        )
-//    ],
-//    indices = [Index("userId")]
+    tableName = "medication_logs"
 )
 data class MedicationLogEntity(
     @PrimaryKey(autoGenerate = true)

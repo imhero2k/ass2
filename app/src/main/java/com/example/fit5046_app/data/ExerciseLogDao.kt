@@ -19,6 +19,9 @@ interface ExerciseLogDao {
     @Query("SELECT * FROM exercise_logs WHERE id = :logId LIMIT 1")
     suspend fun getLogById(logId: Int): ExerciseLogEntity?
 
+    @Query("SELECT * FROM exercise_logs WHERE userId = :userId AND dateTime BETWEEN :startTime AND :endTime ORDER BY dateTime DESC")
+    suspend fun getLogsInTimeRange(userId: String, startTime: Long, endTime: Long): List<ExerciseLogEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: ExerciseLogEntity)
 
