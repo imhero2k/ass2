@@ -32,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,10 +49,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.fit5046_app.util.ReportDownloader
+import com.example.fit5046_app.util.EmailShareDialog
 
 
 @Preview(showBackground = true)
@@ -66,6 +71,10 @@ fun ReportsPreview() {
 @Composable
 fun Reports() {
     var showDateRangePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val diaryViewModel: DiaryViewModel = viewModel()
+    val logs = diaryViewModel.getAllLogs().collectAsState(initial = emptyList())
+
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Scaffold(
@@ -75,8 +84,11 @@ fun Reports() {
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                    onDownloadClick = { /* TODO: Implement Download */ },
-                    onShareClick = { /* TODO: Implement Share */ }
+                    onDownloadClick = { ReportDownloader.saveReportAsPdf(context, logs.value) },
+                    onShareClick = {val file = ReportDownloader.saveReportAsPdf(context, logs.value)
+                        if (file != null) {
+                            EmailShareDialog.shareReport(context, file)
+                        } }
                 )
             },
             floatingActionButton = {

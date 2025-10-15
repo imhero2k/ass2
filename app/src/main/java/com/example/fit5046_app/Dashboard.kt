@@ -1,8 +1,10 @@
 package com.example.fit5046_app
 
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,10 +25,40 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fit5046_app.R
+import com.example.fit5046_app.model.MedicationReminder
+import com.example.fit5046_app.model.ReminderDayOfWeek
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.util.*
 
 @Composable
-fun Dashboard() {
+fun Dashboard(
+    onNavigateToMedicationReminders: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    var nextReminder by remember { mutableStateOf<MedicationReminder?>(null) }
+    var reminderText by remember { mutableStateOf("No upcoming reminders") }
+
+    // Load reminders and calculate next one
+    LaunchedEffect(Unit) {
+        loadRemindersFromStorage(context) { reminders ->
+            val activeReminders = reminders.filter { it.isActive }
+            if (activeReminders.isNotEmpty()) {
+                val next = findNextReminder(activeReminders)
+                nextReminder = next
+                if (next != null) {
+                    val timeStr = String.format("%02d:%02d", next.hour, next.minute)
+                    reminderText = "Take ${next.medicationName}${if (next.dosage.isNotEmpty()) " (${next.dosage})" else ""} at $timeStr"
+                } else {
+                    reminderText = "No upcoming reminders today"
+                }
+            } else {
+                reminderText = "No medication reminders set"
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -36,7 +69,8 @@ fun Dashboard() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .clickable { onNavigateToMedicationReminders() },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
@@ -50,26 +84,26 @@ fun Dashboard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "🔔",
+                    text = "💊",
                     fontSize = 24.sp,
                     modifier = Modifier.padding(end = 12.dp)
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Reminder",
+                        text = "Next Medication Reminder",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = "Take your insulin shot at 6:00 PM",
+                        text = reminderText,
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
                 }
                 Icon(
                     Icons.Default.ArrowForward,
-                    contentDescription = "Details",
+                    contentDescription = "Manage Reminders",
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
@@ -367,6 +401,73 @@ private fun SummaryCard(
                 }
             }
         }
+    }
+}
+
+// Helper functions for medication reminders
+private fun loadRemindersFromStorage(
+    context: Context,
+    onResult: (List<MedicationReminder>) -> Unit
+) {
+    try {
+        val sharedPrefs = context.getSharedPreferences("medication_reminders", Context.MODE_PRIVATE)
+        val remindersJson = sharedPrefs.getString("reminders", "[]")
+
+        if (remindersJson.isNullOrEmpty() || remindersJson == "[]") {
+            onResult(emptyList())
+            return
+        }
+
+        val gson = Gson()
+        val type = object : TypeToken<List<MedicationReminder>>() {}.type
+        val reminders = gson.fromJson<List<MedicationReminder>>(remindersJson, type) ?: emptyList()
+        onResult(reminders)
+    } catch (e: Exception) {
+        onResult(emptyList())
+    }
+}
+
+private fun findNextReminder(reminders: List<MedicationReminder>): MedicationReminder? {
+    val now = Calendar.getInstance()
+    val currentHour = now.get(Calendar.HOUR_OF_DAY)
+    val currentMinute = now.get(Calendar.MINUTE)
+    val currentDayOfWeek = getCurrentDayOfWeek(now.get(Calendar.DAY_OF_WEEK))
+
+    // Filter reminders for today
+    val todayReminders = reminders.filter { reminder ->
+        reminder.daysOfWeek.contains(currentDayOfWeek)
+    }
+
+    if (todayReminders.isEmpty()) {
+        return null
+    }
+
+    // Find the next reminder today
+    val upcomingToday = todayReminders.filter { reminder ->
+        val reminderMinutes = reminder.hour * 60 + reminder.minute
+        val currentMinutes = currentHour * 60 + currentMinute
+        reminderMinutes > currentMinutes
+    }
+
+    return if (upcomingToday.isNotEmpty()) {
+        // Return the earliest upcoming reminder today
+        upcomingToday.minByOrNull { it.hour * 60 + it.minute }
+    } else {
+        // No more reminders today, return the earliest one for today
+        todayReminders.minByOrNull { it.hour * 60 + it.minute }
+    }
+}
+
+private fun getCurrentDayOfWeek(calendarDayOfWeek: Int): ReminderDayOfWeek {
+    return when (calendarDayOfWeek) {
+        Calendar.SUNDAY -> ReminderDayOfWeek.SUNDAY
+        Calendar.MONDAY -> ReminderDayOfWeek.MONDAY
+        Calendar.TUESDAY -> ReminderDayOfWeek.TUESDAY
+        Calendar.WEDNESDAY -> ReminderDayOfWeek.WEDNESDAY
+        Calendar.THURSDAY -> ReminderDayOfWeek.THURSDAY
+        Calendar.FRIDAY -> ReminderDayOfWeek.FRIDAY
+        Calendar.SATURDAY -> ReminderDayOfWeek.SATURDAY
+        else -> ReminderDayOfWeek.MONDAY
     }
 }
 
