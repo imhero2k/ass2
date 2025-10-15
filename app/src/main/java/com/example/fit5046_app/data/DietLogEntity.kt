@@ -32,5 +32,12 @@ data class DietLogEntity(
     val proteinGrams: Float?,
     val fatGrams: Float?,
     val carbGrams: Float?,
-    val foodItems: List<String>?
+    val foodItems: List<String>?,
+    
+    // Nutrition Analysis
+    val isAnalyzedByML: Boolean = false,
+    val analysisConfidence: Float? = null,
+    val analyzedImageUri: String? = null,
+    val detectedFoodItems: List<String>? = null,
+    val analysisTimestamp: LocalDateTime? = null
 )
