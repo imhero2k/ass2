@@ -34,45 +34,49 @@ fun UserSetting(
     ) {
         // Header
         Text(
-            text = "User Settings",
+            text = "User",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        // User Profile Card
+        // Edit Profile Card
         SettingsCard(
-            title = "User Profile",
-            subtitle = "Manage your personal and health information",
+            title = "Edit Profile",
+            subtitle = "Update your personal information",
             icon = Icons.Default.Person,
             onClick = onNavigateToProfile
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Reminder Management Card
+        // Reminder Settings Card
         SettingsCard(
-            title = "Reminder Management",
-            subtitle = "Configure medication and health reminders",
+            title = "Reminder Settings",
+            subtitle = "Manage medication reminders",
             icon = Icons.Default.Notifications,
             onClick = onNavigateToReminders
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // App Information Card
+        // About Card
         SettingsCard(
-            title = "App Information",
-            subtitle = "View app details, privacy policy, and support",
+            title = "About",
+            subtitle = "App information and disclaimer",
             icon = Icons.Default.Info,
             onClick = onNavigateToAppInfo
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Logout Section
-        LogoutSection(
-            onLogoutClick = { showSignOutDialog = true }
+        // Log Out Card
+        SettingsCard(
+            title = "Log Out",
+            subtitle = "Sign out of your account",
+            icon = Icons.Default.ExitToApp,
+            onClick = { showSignOutDialog = true },
+            isDestructive = true
         )
     }
 
@@ -108,13 +112,17 @@ private fun SettingsCard(
     title: String,
     subtitle: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isDestructive: Boolean = false
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White // White background
+        )
     ) {
         Row(
             modifier = Modifier
@@ -125,7 +133,7 @@ private fun SettingsCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = if (isDestructive) Color.Red else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -133,7 +141,8 @@ private fun SettingsCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isDestructive) Color.Red else Color.Black
                 )
                 Text(
                     text = subtitle,
@@ -147,54 +156,6 @@ private fun SettingsCard(
                 tint = Color.Gray,
                 modifier = Modifier.size(20.dp)
             )
-        }
-    }
-}
-
-@Composable
-private fun LogoutSection(onLogoutClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Logout",
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Account Actions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Button(
-                onClick = onLogoutClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Sign Out",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Sign Out")
-            }
         }
     }
 }
