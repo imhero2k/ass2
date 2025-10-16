@@ -3,6 +3,7 @@
 package com.example.fit5046_app
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -219,6 +221,23 @@ fun Log(
                 navController = navController,
                 editingLogId = if (currentEditingLogType == "MEDICATION") currentEditingLogId else null
             )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                logViewModel.deleteSensorGeneratedGlucoseLogs(currentUserId)
+                Toast.makeText(context, "Sensor logs deleted", Toast.LENGTH_SHORT).show()
+                navController?.navigate("diary") {
+                    popUpTo("log") { inclusive = true }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Delete All Sensor Generated Logs")
         }
     }
 }

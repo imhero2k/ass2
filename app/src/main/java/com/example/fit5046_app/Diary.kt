@@ -142,7 +142,7 @@ fun Diary(navController: androidx.navigation.NavController? = null) {
     // Step 1: Determine valid dates based on glucose filter 
     val validDates: Set<LocalDate>? = if (currentFilter.includeHighGlucose || currentFilter.includeLowGlucose || currentFilter.includeNormalGlucose) {
         // Find all days that have glucose readings matching the criteria
-        allLogs
+            allLogs
             .filter { it.type == LogType.BLOOD_GLUCOSE }
             .map { it as LogDisplayItem.GlucoseItem }
             .filter { glucoseLog ->
@@ -190,32 +190,32 @@ fun Diary(navController: androidx.navigation.NavController? = null) {
     // Step 3: Apply text search 
     val filteredLogs = if (searchInput.isBlank()) {
         filteredLogsBeforeSearch
-    } else {
+        } else {
         filteredLogsBeforeSearch.filter { log ->
-            (log.notes?.contains(searchInput, ignoreCase = true) == true) ||
-                    when (log.type) {
-                        LogType.DIET -> (log as LogDisplayItem.DietItem).foodItems != null &&
-                                log.foodItems!!.any {
-                                    it.contains(
-                                        searchInput,
-                                        ignoreCase = true
-                                    )
-                                }
+                (log.notes?.contains(searchInput, ignoreCase = true) == true) ||
+                        when (log.type) {
+                            LogType.DIET -> (log as LogDisplayItem.DietItem).foodItems != null &&
+                                    log.foodItems!!.any {
+                                        it.contains(
+                                            searchInput,
+                                            ignoreCase = true
+                                        )
+                                    }
 
-                        LogType.MEDICATION -> (log as LogDisplayItem.MedicationItem).name.contains(
-                            searchInput,
-                            ignoreCase = true
-                        )
+                            LogType.MEDICATION -> (log as LogDisplayItem.MedicationItem).name.contains(
+                                searchInput,
+                                ignoreCase = true
+                            )
 
-                        LogType.EXERCISE -> (log as LogDisplayItem.ExerciseItem).exerciseType.displayName.contains(
-                            searchInput,
-                            ignoreCase = true
-                        )
+                            LogType.EXERCISE -> (log as LogDisplayItem.ExerciseItem).exerciseType.displayName.contains(
+                                searchInput,
+                                ignoreCase = true
+                            )
 
-                        else -> false
-                    }
+                            else -> false
+                        }
+            }
         }
-    }
 
     // group logs by date
     val dailyLogs = filteredLogs.groupBy { it.dateTime.toLocalDate() }
