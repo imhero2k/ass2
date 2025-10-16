@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fit5046_app.data.BloodGlucoseLogEntity
 import com.example.fit5046_app.data.DietLogEntity
+import com.example.fit5046_app.data.ExerciseLogEntity
 import com.example.fit5046_app.data.MedicationLogEntity
 import com.example.fit5046_app.model.EntryPeriod
 import com.google.firebase.auth.FirebaseAuth
@@ -30,19 +31,23 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val medicationLogs = repository.getAllMedicationLogs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
+    val exerciseLogs = repository.getAllExerciseLogs()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    
     // Dashboard data
     val dashboardData = combine(
         bloodGlucoseLogs,
         dietLogs,
-        medicationLogs
-    ) { glucoseLogs, dietLogs, medicationLogs ->
+        medicationLogs,
+        exerciseLogs
+    ) { glucoseLogs, dietLogs, medicationLogs, exerciseLogs ->
         DashboardData(
             latestGlucose = getLatestGlucose(glucoseLogs),
             glucoseTrend = getGlucoseTrend(glucoseLogs),
             todayCalories = getTodayCalories(dietLogs),
             mealCalories = getMealCalories(dietLogs),
-            waterIntake = getWaterIntake(dietLogs),
-            insulinDosage = getInsulinDosage(medicationLogs),
+            exerciseMinutes = getTodayExerciseMinutes(exerciseLogs),
+            medicationCount = getTodayMedicationCount(medicationLogs),
             glucoseReadings = getGlucoseReadings(glucoseLogs),
             weeklyTrend = getWeeklyTrend(glucoseLogs)
         )
@@ -105,13 +110,20 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             .count() * 250 // Assume 250ml per entry
     }
     
-    private fun getInsulinDosage(logs: List<MedicationLogEntity>): Float {
+    private fun getTodayExerciseMinutes(logs: List<ExerciseLogEntity>): Int {
         val today = LocalDate.now()
         return logs
             .filter { it.userId == currentUserId }
             .filter { it.dateTime.toLocalDate() == today }
-            .filter { it.name.lowercase().contains("insulin") }
-            .sumOf { it.dosage.toDouble() }.toFloat()
+            .sumOf { it.durationMinutes }
+    }
+    
+    private fun getTodayMedicationCount(logs: List<MedicationLogEntity>): Int {
+        val today = LocalDate.now()
+        return logs
+            .filter { it.userId == currentUserId }
+            .filter { it.dateTime.toLocalDate() == today }
+            .count()
     }
     
     private fun getGlucoseReadings(logs: List<BloodGlucoseLogEntity>): Int {
@@ -150,8 +162,8 @@ data class DashboardData(
     val glucoseTrend: List<Float> = emptyList(),
     val todayCalories: Int = 0,
     val mealCalories: MealCalories = MealCalories(),
-    val waterIntake: Int = 0,
-    val insulinDosage: Float = 0f,
+    val exerciseMinutes: Int = 0,
+    val medicationCount: Int = 0,
     val glucoseReadings: Int = 0,
     val weeklyTrend: List<DailyGlucose> = emptyList()
 )

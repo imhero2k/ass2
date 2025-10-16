@@ -13,9 +13,13 @@ import androidx.room.TypeConverters
         DietLogEntity::class,
         ExerciseLogEntity::class,
         MedicationLogEntity::class,
-        MedicationReminderEntity::class
+        MedicationReminderEntity::class,
+        GlucoseSpikeAnalysisEntity::class,
+        GlucoseSpikeEntity::class,
+        FoodGlucoseCorrelationEntity::class,
+        FoodRecommendationEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -23,11 +27,10 @@ abstract class LogDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun bloodGlucoseLogDao(): BloodGlucoseLogDao
     abstract fun dietLogDao(): DietLogDao
-
     abstract fun exerciseLogDao(): ExerciseLogDao
-
     abstract fun medicationLogDao(): MedicationLogDao
     abstract fun medicationReminderDao(): MedicationReminderDao
+    abstract fun glucoseSpikeAnalysisDao(): GlucoseSpikeAnalysisDao
 
     companion object {
         @Volatile

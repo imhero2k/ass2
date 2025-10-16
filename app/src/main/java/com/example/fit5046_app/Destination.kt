@@ -21,4 +21,5 @@ object SubRoutes {
     const val REMINDERMANAGEMENT = "remindermanagement"
     const val MEDICATIONREMINDERS = "medicationreminders"
     const val APPINFORMATION = "appinformation"
+    const val GLUCOSE_ANALYSIS = "glucose_analysis"
 }
