@@ -29,7 +29,7 @@ class OllamaService {
     companion object {
         private const val TAG = "OllamaService"
         private const val OLLAMA_BASE_URL = "http://10.0.2.2:11434"
-        private const val MODEL_NAME = "hf.co/mradermacher/Diabetica-1.5B-GGUF:Q4_K_M"
+        private const val MODEL_NAME = "hf.co/MariaJas/Diabetica-7B-Q2_K-GGUF:Q2_K"
 
         suspend fun generateResponse(userMessage: String): String {
             return withContext(Dispatchers.IO) {
