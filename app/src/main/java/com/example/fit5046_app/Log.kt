@@ -2,6 +2,7 @@
 
 package com.example.fit5046_app
 
+import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -22,9 +23,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -48,35 +49,26 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
-import kotlinx.coroutines.launch
-import android.net.Uri
-import com.example.fit5046_app.service.NutritionAnalysisService
-import com.example.fit5046_app.utils.ImagePicker
-import com.example.fit5046_app.utils.ImageUtils
-import com.example.fit5046_app.utils.rememberImagePicker
-import com.example.fit5046_app.utils.rememberSimpleImagePicker
 import com.example.fit5046_app.data.BloodGlucoseLogEntity
 import com.example.fit5046_app.data.DietLogEntity
 import com.example.fit5046_app.data.ExerciseLogEntity
@@ -86,6 +78,10 @@ import com.example.fit5046_app.model.EntryPeriod
 import com.example.fit5046_app.model.ExerciseType
 import com.example.fit5046_app.model.Intensity
 import com.example.fit5046_app.model.MealType
+import com.example.fit5046_app.service.NutritionAnalysisService
+import com.example.fit5046_app.utils.ImageUtils
+import com.example.fit5046_app.utils.rememberSimpleImagePicker
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -436,24 +432,28 @@ fun DietLogForm(
     var newFoodName by remember(editingLogId) { mutableStateOf("") }
     var selectedMealType by remember(editingLogId) { mutableStateOf(MealType.HOMEMADE) }
     var selectedDietaryPreferences by remember(editingLogId) { mutableStateOf(setOf<DietaryPreference>()) }
-    
+
     // Nutrition Analysis
     var isAnalyzing by remember { mutableStateOf(false) }
-    var analysisResult by remember { mutableStateOf<NutritionAnalysisService.NutritionAnalysisResult?>(null) }
+    var analysisResult by remember {
+        mutableStateOf<NutritionAnalysisService.NutritionAnalysisResult?>(
+            null
+        )
+    }
     var analysisError by remember { mutableStateOf<String?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    
+
     // services
     val nutritionService = remember { NutritionAnalysisService() }
     val coroutineScope = rememberCoroutineScope()
-    
+
     // Image picker
     val imagePicker = rememberSimpleImagePicker(
         onImageSelected = { uri ->
             selectedImageUri = uri
             analysisError = null
             analysisResult = null
-            
+
             // nutrition analysis
             coroutineScope.launch {
                 isAnalyzing = true
@@ -489,7 +489,7 @@ fun DietLogForm(
             analysisError = error
         }
     )
-    
+
     // Cleanup 
     DisposableEffect(Unit) {
         onDispose {
@@ -784,8 +784,7 @@ fun DietLogForm(
                 Text("Gallery")
             }
         }
-        
-        
+
 
         // Results
         if (isAnalyzing) {
@@ -823,7 +822,7 @@ fun DietLogForm(
                 }
             }
         }
-        
+
         // Result
         analysisResult?.let { result ->
             Card(
@@ -852,9 +851,9 @@ fun DietLogForm(
                             fontWeight = FontWeight.Medium
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // Detected Food Items
                     Text(
                         text = "Detected Food Items:",
@@ -878,9 +877,9 @@ fun DietLogForm(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // Summary
                     Text(
                         text = "Estimated Nutrition:",
@@ -917,7 +916,7 @@ fun DietLogForm(
                 }
             }
         }
-        
+
         // Error
         analysisError?.let { error ->
             Card(
@@ -954,7 +953,7 @@ fun DietLogForm(
                 }
             }
         }
-        
+
         // Image Preview
         selectedImageUri?.let { uri ->
             Card(
@@ -1024,7 +1023,7 @@ fun DietLogForm(
                                 fatGrams = fatFloat,
                                 carbGrams = carbsFloat,
                                 foodItems = parsedFoodItems,
-                                
+
                                 // Update metadata
                                 isAnalyzedByML = analysisResult != null,
                                 analysisConfidence = analysisResult?.confidence,
@@ -1114,7 +1113,7 @@ fun DietLogForm(
                             fatGrams = fatFloat,
                             carbGrams = carbsFloat,
                             foodItems = parsedFoodItems,
-                            
+
                             // metadata
                             isAnalyzedByML = analysisResult != null,
                             analysisConfidence = analysisResult?.confidence,
@@ -1574,7 +1573,7 @@ fun ExerciseLogForm(
                 value = duration,
                 onValueChange = { duration = it },
                 label = { Text("Duration (minutes) *") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.6f),
                 isError = duration.isBlank()
             )
 
@@ -1582,7 +1581,7 @@ fun ExerciseLogForm(
             ExposedDropdownMenuBox(
                 expanded = intensityExpanded,
                 onExpandedChange = { intensityExpanded = !intensityExpanded },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(0.4f)
             ) {
                 OutlinedTextField(
                     value = intensity.displayName,

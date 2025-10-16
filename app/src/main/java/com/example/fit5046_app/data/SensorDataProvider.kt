@@ -21,7 +21,7 @@ class SensorDataProvider(private val context: Context) {
         val dataLines = lines.drop(1) // skip header
         
         var index = 0
-        while (true) {
+        while (index < 24) {
             if (dataLines.isEmpty()) break
             val line = dataLines[index % dataLines.size] // cycle through the csv
             
