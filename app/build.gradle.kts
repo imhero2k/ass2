@@ -64,16 +64,6 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.coil.compose)
-    
-    // ML Kit and Camera dependencies
-    implementation(libs.mlkit.image.labeling)
-    implementation(libs.mlkit.image.labeling.custom)
-    implementation(libs.camerax.core)
-    implementation(libs.camerax.camera2)
-    implementation(libs.camerax.lifecycle)
-    implementation(libs.camerax.view)
-    implementation(libs.activity.compose)
-    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

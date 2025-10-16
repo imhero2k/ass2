@@ -69,6 +69,17 @@ object DateTimeFormatters {
 }
 
 
+@Preview(showBackground = true)
+@Composable
+fun Preview() {
+    FIT5046_appTheme {
+        val myLogs = getMockLogs()
+        val emptyLogs = listOf<Log>()
+        Diary()
+    }
+}
+
+
 @Composable
 fun Diary(navController: androidx.navigation.NavController? = null) {
     val context = LocalContext.current
@@ -137,7 +148,7 @@ fun Diary(navController: androidx.navigation.NavController? = null) {
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
-                        navController?.navigate("log")
+                        // TODO: Go to the Log page
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                 ) {

@@ -22,11 +22,13 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,7 +50,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 
 @Composable
@@ -78,13 +80,11 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary)
-                .padding(vertical = 50.dp),
+                .padding(vertical = 60.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -128,7 +128,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email *", color = MaterialTheme.colorScheme.primary) },
+                    label = { Text("Email", color = MaterialTheme.colorScheme.primary) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -142,7 +142,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password *", color = MaterialTheme.colorScheme.primary) },
+                    label = { Text("Password", color = MaterialTheme.colorScheme.primary) },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     singleLine = true,
                     trailingIcon = {
@@ -187,9 +187,9 @@ fun LoginScreen(
                         .height(56.dp)
                 ) {
                     if (authState.isLoading) {
-                        Text("Logging In...", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                        Text("Signing In...", fontSize = 18.sp, fontWeight = FontWeight.Medium)
                     } else {
-                        Text("Log in", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                        Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Medium)
                     }
                 }
 
