@@ -86,7 +86,7 @@ fun UserSetting(
         // Log Out Card
         SettingsCard(
             title = "Log Out",
-            subtitle = "Sign out of your account",
+            subtitle = "Log out of your account",
             icon = Icons.Default.ExitToApp,
             onClick = { showSignOutDialog = true },
             isDestructive = true
@@ -97,8 +97,9 @@ fun UserSetting(
     if (showSignOutDialog) {
         AlertDialog(
             onDismissRequest = { showSignOutDialog = false },
-            title = { Text("Sign Out") },
-            text = { Text("Are you sure you want to sign out?") },
+            containerColor = Color.White,
+            title = { Text("Log Out") },
+            text = { Text("Are you sure you want to Log out?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -106,7 +107,7 @@ fun UserSetting(
                         showSignOutDialog = false
                     }
                 ) {
-                    Text("Sign Out")
+                    Text("Log Out")
                 }
             },
             dismissButton = {

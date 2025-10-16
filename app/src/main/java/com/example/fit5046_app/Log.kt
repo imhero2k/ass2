@@ -23,6 +23,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -61,6 +64,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
+import android.net.Uri
+import com.example.fit5046_app.service.NutritionAnalysisService
+import com.example.fit5046_app.utils.ImagePicker
+import com.example.fit5046_app.utils.ImageUtils
+import com.example.fit5046_app.utils.rememberImagePicker
+import com.example.fit5046_app.utils.rememberSimpleImagePicker
 import com.example.fit5046_app.data.BloodGlucoseLogEntity
 import com.example.fit5046_app.data.DietLogEntity
 import com.example.fit5046_app.data.ExerciseLogEntity
@@ -420,6 +436,66 @@ fun DietLogForm(
     var newFoodName by remember(editingLogId) { mutableStateOf("") }
     var selectedMealType by remember(editingLogId) { mutableStateOf(MealType.HOMEMADE) }
     var selectedDietaryPreferences by remember(editingLogId) { mutableStateOf(setOf<DietaryPreference>()) }
+    
+    // Nutrition Analysis
+    var isAnalyzing by remember { mutableStateOf(false) }
+    var analysisResult by remember { mutableStateOf<NutritionAnalysisService.NutritionAnalysisResult?>(null) }
+    var analysisError by remember { mutableStateOf<String?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    
+    // services
+    val nutritionService = remember { NutritionAnalysisService() }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Image picker
+    val imagePicker = rememberSimpleImagePicker(
+        onImageSelected = { uri ->
+            selectedImageUri = uri
+            analysisError = null
+            analysisResult = null
+            
+            // nutrition analysis
+            coroutineScope.launch {
+                isAnalyzing = true
+                try {
+                    val bitmap = ImageUtils.uriToBitmap(context, uri)
+                    if (bitmap != null) {
+                        val result = nutritionService.analyzeImage(bitmap)
+                        result.fold(
+                            onSuccess = { analysis ->
+                                analysisResult = analysis
+                                // Auto-fill form with analysis results
+                                calories = analysis.totalCalories.toString()
+                                protein = String.format("%.1f", analysis.totalProtein)
+                                fat = String.format("%.1f", analysis.totalFat)
+                                carbs = String.format("%.1f", analysis.totalCarbs)
+                                newFoodName = analysis.foodItems.joinToString(", ") { it.name }
+                            },
+                            onFailure = { error ->
+                                analysisError = error.message ?: "Analysis failed"
+                            }
+                        )
+                    } else {
+                        analysisError = "Failed to process image"
+                    }
+                } catch (e: Exception) {
+                    analysisError = "Error analyzing image: ${e.message}"
+                } finally {
+                    isAnalyzing = false
+                }
+            }
+        },
+        onError = { error ->
+            analysisError = error
+        }
+    )
+    
+    // Cleanup 
+    DisposableEffect(Unit) {
+        onDispose {
+            nutritionService.cleanup()
+        }
+    }
 
     // Load existing log if editing and populate form fields
     LaunchedEffect(editingLogId) {
@@ -673,11 +749,12 @@ fun DietLogForm(
             // Camera Button
             OutlinedButton(
                 onClick = {
-                    // TODO: Implement camera functionality
-                    // This will trigger ML model to analyze food and fill form
+                    android.util.Log.d("Log", "Camera button clicked")
+                    imagePicker.launchCamera()
                 },
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isAnalyzing
             ) {
                 Icon(
                     imageVector = Icons.Default.Camera,
@@ -691,11 +768,12 @@ fun DietLogForm(
             // Gallery Button
             OutlinedButton(
                 onClick = {
-                    // TODO: Implement gallery functionality
-                    // This will trigger ML model to analyze food and fill form
+                    android.util.Log.d("Log", "Gallery button clicked")
+                    imagePicker.launchGallery()
                 },
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isAnalyzing
             ) {
                 Icon(
                     imageVector = Icons.Default.Image,
@@ -706,36 +784,198 @@ fun DietLogForm(
                 Text("Gallery")
             }
         }
+        
+        
 
-        // ML Analysis Status (placeholder for future implementation)
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "ML Analysis",
-                    tint = MaterialTheme.colorScheme.primary
+        // Results
+        if (isAnalyzing) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Analyzing",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.rotate(if (isAnalyzing) 360f else 0f)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Analyzing Food Image...",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Please wait while we detect food items and estimate nutritional values",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Result
+        analysisResult?.let { result ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Analysis Complete",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Food Analysis Complete",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Detected Food Items
                     Text(
-                        text = "AI Food Recognition",
+                        text = "Detected Food Items:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    result.foodItems.forEach { foodItem ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "• ${foodItem.name}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "${(foodItem.confidence * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Summary
+                    Text(
+                        text = "Estimated Nutrition:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Calories: ${result.totalCalories}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "Protein: ${String.format("%.1f", result.totalProtein)}g",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Fat: ${String.format("%.1f", result.totalFat)}g",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "Carbs: ${String.format("%.1f", result.totalCarbs)}g",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Error
+        analysisError?.let { error ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Analysis Failed",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = error,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Image Preview
+        selectedImageUri?.let { uri ->
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Selected Image:",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium
                     )
-                    Text(
-                        text = "Take a photo to automatically detect food items and estimate nutritional values",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = "Selected food image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
@@ -783,10 +1023,17 @@ fun DietLogForm(
                                 proteinGrams = proteinFloat,
                                 fatGrams = fatFloat,
                                 carbGrams = carbsFloat,
-                                foodItems = parsedFoodItems
+                                foodItems = parsedFoodItems,
+                                
+                                // Update metadata
+                                isAnalyzedByML = analysisResult != null,
+                                analysisConfidence = analysisResult?.confidence,
+                                analyzedImageUri = selectedImageUri?.toString(),
+                                detectedFoodItems = analysisResult?.foodItems?.map { it.name },
+                                analysisTimestamp = if (analysisResult != null) LocalDateTime.now() else logToEdit.analysisTimestamp
                             )
 
-                            // Update in database
+                            // Update db
                             logViewModel.updateDietLog(updatedDietLogEntity)
 
                             // Show toast
@@ -866,7 +1113,14 @@ fun DietLogForm(
                             proteinGrams = proteinFloat,
                             fatGrams = fatFloat,
                             carbGrams = carbsFloat,
-                            foodItems = parsedFoodItems
+                            foodItems = parsedFoodItems,
+                            
+                            // metadata
+                            isAnalyzedByML = analysisResult != null,
+                            analysisConfidence = analysisResult?.confidence,
+                            analyzedImageUri = selectedImageUri?.toString(),
+                            detectedFoodItems = analysisResult?.foodItems?.map { it.name },
+                            analysisTimestamp = if (analysisResult != null) LocalDateTime.now() else null
                         )
 
                         // Save to database

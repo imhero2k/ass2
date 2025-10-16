@@ -1,8 +1,6 @@
 package com.example.fit5046_app
 
-
 import android.content.Context
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,15 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.fit5046_app.R
+import com.example.fit5046_app.components.*
 import com.example.fit5046_app.model.MedicationReminder
 import com.example.fit5046_app.model.ReminderDayOfWeek
 import com.example.fit5046_app.service.OllamaService
@@ -41,6 +37,9 @@ fun Dashboard(
     onNavigateToMedicationReminders: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val viewModel = remember { DashboardViewModel(context.applicationContext as android.app.Application) }
+    val dashboardData by viewModel.dashboardData.collectAsState()
+    
     var nextReminder by remember { mutableStateOf<MedicationReminder?>(null) }
     var reminderText by remember { mutableStateOf("No upcoming reminders") }
     var showChatBot by remember { mutableStateOf(false) }
@@ -187,15 +186,15 @@ fun Dashboard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            MetricCard("Insulin", "12u", "💉")
+                            MetricCard("Insulin", "${dashboardData.insulinDosage}u", "💉")
                             Text(
-                                text = "7.2",
+                                text = "${dashboardData.latestGlucose?.let { String.format("%.1f", it) } ?: "N/A"}",
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.weight(1f)
                             )
-                            MetricCard("Breakfast", "45g", "🍳")
+                            MetricCard("Breakfast", "${dashboardData.mealCalories.breakfast}cal", "🍳")
                         }
 
                         Spacer(Modifier.height(16.dp))
@@ -205,7 +204,7 @@ fun Dashboard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            MetricCard("Readings", "8", "📊")
+                            MetricCard("Readings", "${dashboardData.glucoseReadings}", "📊")
 
                             // Central glucose reading
                             Surface(
@@ -218,7 +217,7 @@ fun Dashboard(
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     Text(
-                                        text = "6.8",
+                                        text = dashboardData.latestGlucose?.let { String.format("%.1f", it) } ?: "N/A",
                                         fontSize = 32.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -231,7 +230,7 @@ fun Dashboard(
                                 }
                             }
 
-                            MetricCard("Lunch", "38g", "🥗")
+                            MetricCard("Lunch", "${dashboardData.mealCalories.lunch}cal", "🥗")
                         }
 
                         Spacer(Modifier.height(16.dp))
@@ -240,7 +239,7 @@ fun Dashboard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            MetricCard("Water", "6", "💧")
+                            MetricCard("Water", "${dashboardData.waterIntake}ml", "💧")
                             Text(
                                 text = "Target: 7.0",
                                 fontSize = 12.sp,
@@ -248,7 +247,7 @@ fun Dashboard(
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.weight(1f)
                             )
-                            MetricCard("Dinner", "42g", "🍽️")
+                            MetricCard("Dinner", "${dashboardData.mealCalories.dinner}cal", "🍽️")
                         }
                     }
                 }
@@ -281,34 +280,67 @@ fun Dashboard(
 
                 Spacer(Modifier.height(20.dp))
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                            RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                // Glucose Trend Chart
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "📊",
-                            fontSize = 40.sp
-                        )
-                        Text(
-                            text = "Blood Glucose Levels",
+                            text = "Blood Glucose Trend",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        GlucoseTrendChart(glucoseTrend = dashboardData.glucoseTrend)
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Weekly Glucose Chart
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
                         Text(
-                            text = "Past 7 Days Trend",
-                            fontSize = 12.sp,
-                            color = Color.Gray
+                            text = "Weekly Glucose Average",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        WeeklyGlucoseChart(weeklyTrend = dashboardData.weeklyTrend)
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Meal Calories Chart
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Today's Meal Calories",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        MealCaloriesChart(mealCalories = dashboardData.mealCalories)
                     }
                 }
 
@@ -322,14 +354,36 @@ fun Dashboard(
                         icon = "🩺",
                         title = "Blood Sugar",
                         subtitle = "Last reading: Today",
-                        value = "6.8 mmol/L",
+                        value = dashboardData.latestGlucose?.let { String.format("%.1f mmol/L", it) } ?: "No data",
                         modifier = Modifier.weight(1f)
                     )
                     SummaryCard(
-                        icon = "🎯",
-                        title = "My Goal",
-                        subtitle = "Maintain levels 4-7 mmol/L",
-                        value = "",
+                        icon = "🔥",
+                        title = "Today's Calories",
+                        subtitle = "Total intake",
+                        value = "${dashboardData.todayCalories} cal",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    SummaryCard(
+                        icon = "💧",
+                        title = "Water Intake",
+                        subtitle = "Today's consumption",
+                        value = "${dashboardData.waterIntake} ml",
+                        modifier = Modifier.weight(1f)
+                    )
+                    SummaryCard(
+                        icon = "💉",
+                        title = "Insulin",
+                        subtitle = "Today's dosage",
+                        value = "${dashboardData.insulinDosage}u",
                         modifier = Modifier.weight(1f)
                     )
                 }
