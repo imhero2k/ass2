@@ -181,7 +181,7 @@ fun Dashboard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            MetricCard("Insulin", "${dashboardData.insulinDosage}u", "💉")
+                            MetricCard("Exercise", "${dashboardData.exerciseMinutes}min", "🏃")
                             Text(
                                 text = "${dashboardData.latestGlucose?.let { String.format("%.1f", it) } ?: "N/A"}",
                                 fontSize = 14.sp,
@@ -234,7 +234,7 @@ fun Dashboard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            MetricCard("Water", "${dashboardData.waterIntake}ml", "💧")
+                            MetricCard("Medication", "${dashboardData.medicationCount} doses", "💊")
                             Text(
                                 text = "Target: 7.0",
                                 fontSize = 12.sp,
@@ -368,17 +368,17 @@ fun Dashboard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     SummaryCard(
-                        icon = "💧",
-                        title = "Water Intake",
-                        subtitle = "Today's consumption",
-                        value = "${dashboardData.waterIntake} ml",
+                        icon = "🏃",
+                        title = "Exercise",
+                        subtitle = "Today's activity",
+                        value = "${dashboardData.exerciseMinutes} min",
                         modifier = Modifier.weight(1f)
                     )
                     SummaryCard(
-                        icon = "💉",
-                        title = "Insulin",
-                        subtitle = "Today's dosage",
-                        value = "${dashboardData.insulinDosage}u",
+                        icon = "💊",
+                        title = "Medication",
+                        subtitle = "Today's doses",
+                        value = "${dashboardData.medicationCount} doses",
                         modifier = Modifier.weight(1f)
                     )
                 }

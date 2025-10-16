@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.remember
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
+import com.example.fit5046_app.components.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -69,11 +71,13 @@ fun ReportsPreview() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Reports() {
+fun Reports(navController: androidx.navigation.NavController? = null) {
     var showDateRangePicker by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val diaryViewModel: DiaryViewModel = viewModel()
+    val reportsViewModel: ReportsViewModel = viewModel()
     val logs = diaryViewModel.getAllLogs().collectAsState(initial = emptyList())
+    val reportsData by reportsViewModel.reportsData.collectAsState()
 
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -112,9 +116,50 @@ fun Reports() {
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    GlucoseChartCard()
-                    DietChartCard()
-                    ExerciseChartCard()
+                    // Glucose Analysis Button
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Glucose Spike Analysis",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = "Identify which foods cause glucose spikes",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Button(
+                                onClick = { navController?.navigate(SubRoutes.GLUCOSE_ANALYSIS) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text("Analyze")
+                            }
+                        }
+                    }
+                    
+                    // Health Correlation Overview Chart
+                    HealthCorrelationCard(reportsData.glucoseAnalysis, reportsData.dietAnalysis, reportsData.exerciseAnalysis)
+                    
+                    GlucoseChartCard(reportsData.glucoseAnalysis)
+                    DietChartCard(reportsData.dietAnalysis)
+                    ExerciseChartCard(reportsData.exerciseAnalysis)
                 }
             }
         }
@@ -201,7 +246,70 @@ fun BottomButtonsContainer(
 }
 
 @Composable
-fun GlucoseChartCard() {
+fun HealthCorrelationCard(
+    glucoseAnalysis: GlucoseAnalysis,
+    dietAnalysis: DietAnalysis,
+    exerciseAnalysis: ExerciseAnalysis
+) {
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Column(
+            Modifier
+                .padding(18.dp)
+        ) {
+            Row {
+                Icon(
+                    painter = painterResource(id = R.drawable.reports_24px),
+                    contentDescription = "Health Correlation Icon",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.CenterVertically)
+                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = "Health Correlation Analysis",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        maxLines = 1
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "7-Day Overview: Glucose, Diet & Exercise Patterns",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
+            )
+
+            // Correlation Chart
+            HealthCorrelationChart(
+                glucoseAnalysis = glucoseAnalysis,
+                dietAnalysis = dietAnalysis,
+                exerciseAnalysis = exerciseAnalysis,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+fun GlucoseChartCard(glucoseAnalysis: GlucoseAnalysis) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -240,9 +348,10 @@ fun GlucoseChartCard() {
                         maxLines = 1
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    // TODO: Replace with average glucose from logs
                     Text(
-                        text = "6.1 mmol/L (avg.)",
+                        text = if (glucoseAnalysis.averageGlucose > 0) 
+                            String.format("%.1f mmol/L (avg.)", glucoseAnalysis.averageGlucose)
+                        else "No data available",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         style = MaterialTheme.typography.bodyMedium,
@@ -266,26 +375,20 @@ fun GlucoseChartCard() {
                         .weight(0.4f)
                         .padding(end = 8.dp)
                 ) {
-                    GlucoseStatRow(label = "Good", count = 4)
-                    GlucoseStatRow(label = "High", count = 2)
-                    GlucoseStatRow(label = "Low", count = 1)
-                    GlucoseStatRow(label = "Total", count = 7)
+                    GlucoseStatRow(label = "Good", count = glucoseAnalysis.goodReadings)
+                    GlucoseStatRow(label = "High", count = glucoseAnalysis.highReadings)
+                    GlucoseStatRow(label = "Low", count = glucoseAnalysis.lowReadings)
+                    GlucoseStatRow(label = "Total", count = glucoseAnalysis.totalReadings)
                 }
 
-                // Right Side: Chart Image
+                // Right Side: Chart
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // TODO: Replace with actual chart
-                    Image(
-                        painter = painterResource(id = R.drawable.glucose_chart),
-                        contentDescription = "Glucose Chart Placeholder",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    GlucoseTrendChart(glucoseAnalysis.dailyAverages)
                 }
             }
         }
@@ -328,7 +431,7 @@ fun GlucoseStatRow(label: String, count: Int) {
 }
 
 @Composable
-fun DietChartCard() {
+fun DietChartCard(dietAnalysis: DietAnalysis) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -369,9 +472,10 @@ fun DietChartCard() {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // TODO: Replace with average from logs
                     Text(
-                        text = "2056 cal/day (avg.)",
+                        text = if (dietAnalysis.averageDailyCalories > 0) 
+                            "${dietAnalysis.averageDailyCalories} cal/day (avg.)"
+                        else "No data available",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         style = MaterialTheme.typography.bodyMedium,
@@ -399,25 +503,19 @@ fun DietChartCard() {
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 8.dp)
                     )
-                    DietStatRow(label = "Carbs (g)", count = 135)
-                    DietStatRow(label = "Protein (g)", count = 104)
-                    DietStatRow(label = "Fats (g)", count = 67)
+                    DietStatRow(label = "Carbs (g)", count = dietAnalysis.averageCarbs.toInt())
+                    DietStatRow(label = "Protein (g)", count = dietAnalysis.averageProtein.toInt())
+                    DietStatRow(label = "Fats (g)", count = dietAnalysis.averageFats.toInt())
                 }
 
-                // Right Side: Chart Image
+                // Right Side: Chart
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // TODO: Replace with actual chart
-                    Image(
-                        painter = painterResource(id = R.drawable.diet_chart),
-                        contentDescription = "Diet Chart Placeholder",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    DietCaloriesChart(dietAnalysis.dailyCalories)
                 }
             }
         }
@@ -461,7 +559,7 @@ fun DietStatRow(label: String, count: Int) {
 }
 
 @Composable
-fun ExerciseChartCard() {
+fun ExerciseChartCard(exerciseAnalysis: ExerciseAnalysis) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -502,9 +600,10 @@ fun ExerciseChartCard() {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // TODO: Replace with average glucose from logs
                     Text(
-                        text = "175 min (total)",
+                        text = if (exerciseAnalysis.totalMinutes > 0) 
+                            "${exerciseAnalysis.totalMinutes} min (total)"
+                        else "No data available",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         style = MaterialTheme.typography.bodyMedium,
@@ -519,11 +618,25 @@ fun ExerciseChartCard() {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    alignment = Alignment.CenterStart,
-                    painter = painterResource(id = R.drawable.exercise_chart),
-                    contentDescription = "Exercise Chart Placeholder",
-                )
+                // Daily exercise minutes chart
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ExerciseMinutesChart(exerciseAnalysis.dailyMinutes)
+                }
+                
+                // Exercise types pie chart
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ExerciseTypesChart(exerciseAnalysis.exerciseTypes)
+                }
             }
 
         }

@@ -278,7 +278,7 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                         editingLogType = logType.ifBlank { null }
                     )
                 }
-                composable(Destination.REPORTS.route) { Reports() }
+                composable(Destination.REPORTS.route) { Reports(navController) }
                 composable(Destination.HEALTHBLOG.route) { HealthBlog() }
                 composable(Destination.USERSETTING.route) {
                     UserSetting(
@@ -301,6 +301,11 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 }
                 composable(SubRoutes.MEDICATIONREMINDERS) {
                     MedicationReminderScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable(SubRoutes.GLUCOSE_ANALYSIS) {
+                    GlucoseSpikeAnalysisScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }

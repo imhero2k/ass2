@@ -13,6 +13,12 @@ import com.example.fit5046_app.data.MedicationLogEntity
 import com.example.fit5046_app.data.UserDao
 import com.example.fit5046_app.data.UserEntity
 import com.example.fit5046_app.data.SensorDataProvider
+import com.example.fit5046_app.data.GlucoseSpikeAnalysisDao
+import com.example.fit5046_app.data.GlucoseSpikeAnalysisEntity
+import com.example.fit5046_app.data.GlucoseSpikeEntity
+import com.example.fit5046_app.data.FoodGlucoseCorrelationEntity
+import com.example.fit5046_app.data.FoodRecommendationEntity
+import com.example.fit5046_app.data.CompleteAnalysisResult
 import com.example.fit5046_app.model.EntryPeriod
 import com.example.fit5046_app.model.LogDisplayItem
 import com.example.fit5046_app.model.toDisplayItem
@@ -37,6 +43,9 @@ class LogRepository(private val application: Application) {
 
     private val medicationLogDao: MedicationLogDao =
         LogDatabase.getDatabase(application).medicationLogDao()
+    
+    private val glucoseSpikeAnalysisDao: GlucoseSpikeAnalysisDao =
+        LogDatabase.getDatabase(application).glucoseSpikeAnalysisDao()
 
     // ----- User Operations-----
     fun getUserById(userId: String): Flow<UserEntity?> = userDao.getUser(userId)
@@ -190,5 +199,89 @@ class LogRepository(private val application: Application) {
             in 17..20 -> EntryPeriod.EVENING
             else -> EntryPeriod.NIGHT
         }
+    }
+    
+    // ----- Glucose Spike Analysis Operations -----
+    
+    // Get all analyses for a user
+    fun getAllAnalysesForUser(userId: String): Flow<List<GlucoseSpikeAnalysisEntity>> =
+        glucoseSpikeAnalysisDao.getAllAnalysesForUser(userId)
+    
+    // Get the latest analysis for a user
+    fun getLatestAnalysisForUser(userId: String): Flow<GlucoseSpikeAnalysisEntity?> =
+        glucoseSpikeAnalysisDao.getLatestAnalysisForUser(userId)
+    
+    // Get complete analysis with all related data
+    suspend fun getCompleteAnalysis(analysisId: Int): CompleteAnalysisResult? =
+        glucoseSpikeAnalysisDao.getCompleteAnalysis(analysisId)
+    
+    suspend fun getLatestCompleteAnalysis(userId: String): CompleteAnalysisResult? =
+        glucoseSpikeAnalysisDao.getLatestCompleteAnalysis(userId)
+    
+    // Get spikes for a specific analysis
+    fun getSpikesForAnalysis(analysisId: Int): Flow<List<GlucoseSpikeEntity>> =
+        glucoseSpikeAnalysisDao.getSpikesForAnalysis(analysisId)
+    
+    // Get all spikes for a user
+    fun getAllSpikesForUser(userId: String): Flow<List<GlucoseSpikeEntity>> =
+        glucoseSpikeAnalysisDao.getAllSpikesForUser(userId)
+    
+    // Get spikes in date range
+    fun getSpikesInDateRange(userId: String, startDate: LocalDateTime, endDate: LocalDateTime): Flow<List<GlucoseSpikeEntity>> =
+        glucoseSpikeAnalysisDao.getSpikesInDateRange(userId, startDate, endDate)
+    
+    // Get correlations for a specific analysis
+    fun getCorrelationsForAnalysis(analysisId: Int): Flow<List<FoodGlucoseCorrelationEntity>> =
+        glucoseSpikeAnalysisDao.getCorrelationsForAnalysis(analysisId)
+    
+    // Get all correlations for a user
+    fun getAllCorrelationsForUser(userId: String): Flow<List<FoodGlucoseCorrelationEntity>> =
+        glucoseSpikeAnalysisDao.getAllCorrelationsForUser(userId)
+    
+    // Get recommendations for a specific analysis
+    fun getRecommendationsForAnalysis(analysisId: Int): Flow<List<FoodRecommendationEntity>> =
+        glucoseSpikeAnalysisDao.getRecommendationsForAnalysis(analysisId)
+    
+    // Get all recommendations for a user
+    fun getAllRecommendationsForUser(userId: String): Flow<List<FoodRecommendationEntity>> =
+        glucoseSpikeAnalysisDao.getAllRecommendationsForUser(userId)
+    
+    // Get recommendations by type
+    fun getRecommendationsByType(userId: String, recommendationType: String): Flow<List<FoodRecommendationEntity>> =
+        glucoseSpikeAnalysisDao.getRecommendationsByType(userId, recommendationType)
+    
+    // Save complete analysis results
+    suspend fun saveAnalysisResults(
+        analysis: GlucoseSpikeAnalysisEntity,
+        spikes: List<GlucoseSpikeEntity>,
+        correlations: List<FoodGlucoseCorrelationEntity>,
+        recommendations: List<FoodRecommendationEntity>
+    ) {
+        val analysisId = glucoseSpikeAnalysisDao.insertAnalysis(analysis).toInt()
+        
+        // Update spikes with analysis ID
+        val spikesWithAnalysisId = spikes.map { it.copy(analysisId = analysisId) }
+        glucoseSpikeAnalysisDao.insertSpikes(spikesWithAnalysisId)
+        
+        // Update correlations with analysis ID
+        val correlationsWithAnalysisId = correlations.map { it.copy(analysisId = analysisId) }
+        glucoseSpikeAnalysisDao.insertCorrelations(correlationsWithAnalysisId)
+        
+        // Update recommendations with analysis ID
+        val recommendationsWithAnalysisId = recommendations.map { it.copy(analysisId = analysisId) }
+        glucoseSpikeAnalysisDao.insertRecommendations(recommendationsWithAnalysisId)
+    }
+    
+    // Delete analysis and all related data
+    suspend fun deleteAnalysis(analysis: GlucoseSpikeAnalysisEntity) {
+        glucoseSpikeAnalysisDao.deleteSpikesForAnalysis(analysis.id)
+        glucoseSpikeAnalysisDao.deleteCorrelationsForAnalysis(analysis.id)
+        glucoseSpikeAnalysisDao.deleteRecommendationsForAnalysis(analysis.id)
+        glucoseSpikeAnalysisDao.deleteAnalysis(analysis)
+    }
+    
+    // Delete all analyses for a user
+    suspend fun deleteAllAnalysesForUser(userId: String) {
+        glucoseSpikeAnalysisDao.deleteAllAnalysesForUser(userId)
     }
 }
