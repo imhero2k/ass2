@@ -52,6 +52,11 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             repository.deleteBloodGlucoseLog(bloodGlucoseLog)
         }
 
+    fun deleteSensorGeneratedGlucoseLogs(userId: String) =
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteSensorGeneratedGlucoseLogs(userId)
+        }
+
     suspend fun getExerciseLogById(logId: Int): ExerciseLogEntity? {
         return repository.getExerciseLogById(logId)
     }

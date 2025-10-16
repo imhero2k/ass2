@@ -18,6 +18,7 @@ import com.example.fit5046_app.model.LogDisplayItem
 import com.example.fit5046_app.model.toDisplayItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -58,6 +59,15 @@ class LogRepository(private val application: Application) {
     suspend fun insertBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.insert(log)
     suspend fun updateBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.update(log)
     suspend fun deleteBloodGlucoseLog(log: BloodGlucoseLogEntity) = bloodGlucoseLogDao.delete(log)
+    suspend fun deleteSensorGeneratedGlucoseLogs(userId: String) {
+        // Get all sensor-generated logs for this user
+        val allLogs = bloodGlucoseLogDao.getAllLogs().first()
+        val sensorLogs = allLogs.filter { 
+            it.userId == userId && it.notes == "From sensor reading" 
+        }
+        // Delete each one
+        sensorLogs.forEach { bloodGlucoseLogDao.delete(it) }
+    }
 
     // ----- Exercise Log Operations -----
     fun getAllExerciseLogs(): Flow<List<ExerciseLogEntity>> = exerciseLogDao.getAllLogs()
