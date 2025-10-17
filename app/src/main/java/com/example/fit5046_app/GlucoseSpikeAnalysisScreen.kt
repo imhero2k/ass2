@@ -74,7 +74,7 @@ fun GlucoseSpikeAnalysisScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Explanation Card
+        // Explanation
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
