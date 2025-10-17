@@ -16,7 +16,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: LogRepository = LogRepository(application)
+    // Get repository from application class (single shared instance)
+    private val repository: LogRepository = 
+        (application as GlucoseDiaryApplication).logRepository
     private val auth = FirebaseAuth.getInstance()
     
     private val currentUserId = auth.currentUser?.uid ?: "anonymous"

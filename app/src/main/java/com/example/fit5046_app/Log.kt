@@ -657,16 +657,16 @@ fun DietLogForm(
             modifier = Modifier.fillMaxWidth()
         ) {
             DietaryPreference.entries.toList().chunked(2).forEach { rowPreferences ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                     rowPreferences.forEach { preference ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Checkbox(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Checkbox(
                                 checked = selectedDietaryPreferences.contains(preference),
                                 onCheckedChange = { isChecked ->
                                     selectedDietaryPreferences = if (isChecked) {
@@ -675,13 +675,13 @@ fun DietLogForm(
                                         selectedDietaryPreferences - preference
                                     }
                                 }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
                                 text = preference.displayName,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                     }
                     // Add empty space if odd number of items in row
                     if (rowPreferences.size < 2) {
@@ -807,35 +807,35 @@ fun DietLogForm(
 
         // Results
         if (isAnalyzing) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
+                Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Analyzing",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.rotate(if (isAnalyzing) 360f else 0f)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
                             text = "Analyzing Food Image...",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
                             text = "Please wait while we detect food items and estimate nutritional values",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1101,36 +1101,36 @@ fun DietLogForm(
             }
         } else {
             // Save Button (for new logs)
-            Button(
-                onClick = {
-                    // Validate and save diet log
-                    val caloriesInt = calories.toIntOrNull()
-                    val proteinFloat = protein.toFloatOrNull()
-                    val fatFloat = fat.toFloatOrNull()
-                    val carbsFloat = carbs.toFloatOrNull()
+        Button(
+            onClick = {
+                // Validate and save diet log
+                val caloriesInt = calories.toIntOrNull()
+                val proteinFloat = protein.toFloatOrNull()
+                val fatFloat = fat.toFloatOrNull()
+                val carbsFloat = carbs.toFloatOrNull()
 
-                    if (caloriesInt != null && proteinFloat != null && fatFloat != null && carbsFloat != null) {
-                        // Parse comma-separated food items
-                        val parsedFoodItems = if (newFoodName.isNotBlank()) {
-                            newFoodName.split(",")
-                                .map { it.trim() }
-                                .filter { it.isNotBlank() }
-                        } else {
-                            emptyList()
-                        }
+                if (caloriesInt != null && proteinFloat != null && fatFloat != null && carbsFloat != null) {
+                    // Parse comma-separated food items
+                    val parsedFoodItems = if (newFoodName.isNotBlank()) {
+                        newFoodName.split(",")
+                            .map { it.trim() }
+                            .filter { it.isNotBlank() }
+                    } else {
+                        emptyList()
+                    }
 
                         // Create DietLogEntity to save to database
                         val dietLogEntity = DietLogEntity(
                             userId = userId,
-                            dateTime = LocalDateTime.of(date, time),
-                            period = period,
-                            notes = notes.ifBlank { null },
+                        dateTime = LocalDateTime.of(date, time),
+                        period = period,
+                        notes = notes.ifBlank { null },
                             mealType = selectedMealType,
                             dietaryPreference = selectedDietaryPreferences.toList(),
-                            calories = caloriesInt,
-                            proteinGrams = proteinFloat,
-                            fatGrams = fatFloat,
-                            carbGrams = carbsFloat,
+                        calories = caloriesInt,
+                        proteinGrams = proteinFloat,
+                        fatGrams = fatFloat,
+                        carbGrams = carbsFloat,
                             foodItems = parsedFoodItems,
 
                             // metadata
@@ -1154,12 +1154,12 @@ fun DietLogForm(
                         navController?.navigate("diary") {
                             popUpTo("diary") { inclusive = false }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = calories.isNotBlank() && protein.isNotBlank() && fat.isNotBlank() && carbs.isNotBlank()
-            ) {
-                Text("Save Diet Log")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = calories.isNotBlank() && protein.isNotBlank() && fat.isNotBlank() && carbs.isNotBlank()
+        ) {
+            Text("Save Diet Log")
             }
         }
     }
@@ -1375,20 +1375,20 @@ fun BloodGlucoseLogForm(
             }
         } else {
             // Save Button (for new logs)
-            Button(
-                onClick = {
-                    // Validate and save blood glucose log
-                    val glucoseValue = value.toFloatOrNull()
+        Button(
+            onClick = {
+                // Validate and save blood glucose log
+                val glucoseValue = value.toFloatOrNull()
 
-                    if (glucoseValue != null && glucoseValue > 0) {
+                if (glucoseValue != null && glucoseValue > 0) {
                         // Create BloodGlucoseLogEntity to save to database
                         val bloodGlucoseLogEntity = BloodGlucoseLogEntity(
                             userId = userId,
-                            dateTime = LocalDateTime.of(date, time),
-                            period = period,
-                            notes = notes.ifBlank { null },
-                            value = glucoseValue
-                        )
+                        dateTime = LocalDateTime.of(date, time),
+                        period = period,
+                        notes = notes.ifBlank { null },
+                        value = glucoseValue
+                    )
 
                         // Save to database
                         logViewModel.insertBloodGlucoseLog(bloodGlucoseLogEntity)
@@ -1404,12 +1404,12 @@ fun BloodGlucoseLogForm(
                         navController?.navigate("diary") {
                             popUpTo("log") { inclusive = true }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = value.isNotBlank() && value.toFloatOrNull() != null
-            ) {
-                Text("Save Blood Glucose Log")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = value.isNotBlank() && value.toFloatOrNull() != null
+        ) {
+            Text("Save Blood Glucose Log")
             }
         }
     }
@@ -1699,22 +1699,22 @@ fun ExerciseLogForm(
             }
         } else {
             // Save Button (for new logs)
-            Button(
-                onClick = {
-                    // Validate and save exercise log
-                    val durationInt = duration.toIntOrNull()
+        Button(
+            onClick = {
+                // Validate and save exercise log
+                val durationInt = duration.toIntOrNull()
 
-                    if (durationInt != null && durationInt > 0) {
+                if (durationInt != null && durationInt > 0) {
                         // Create ExerciseLogEntity to save to database
                         val exerciseLogEntity = ExerciseLogEntity(
                             userId = userId,
-                            dateTime = LocalDateTime.of(date, time),
-                            period = period,
-                            notes = notes.ifBlank { null },
-                            durationMinutes = durationInt,
-                            exerciseType = exerciseType,
-                            intensity = intensity
-                        )
+                        dateTime = LocalDateTime.of(date, time),
+                        period = period,
+                        notes = notes.ifBlank { null },
+                        durationMinutes = durationInt,
+                        exerciseType = exerciseType,
+                        intensity = intensity
+                    )
 
                         // Save to database
                         logViewModel.insertExerciseLog(exerciseLogEntity)
@@ -1730,12 +1730,12 @@ fun ExerciseLogForm(
                         navController?.navigate("diary") {
                             popUpTo("log") { inclusive = true }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = duration.isNotBlank() && duration.toIntOrNull() != null
-            ) {
-                Text("Save Exercise Log")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = duration.isNotBlank() && duration.toIntOrNull() != null
+        ) {
+            Text("Save Exercise Log")
             }
         }
     }
@@ -1975,22 +1975,22 @@ fun MedicationLogForm(
             }
         } else {
             // Save Button (for new logs)
-            Button(
-                onClick = {
-                    // Validate and save medication log
-                    val dosageFloat = dosage.toFloatOrNull()
+        Button(
+            onClick = {
+                // Validate and save medication log
+                val dosageFloat = dosage.toFloatOrNull()
 
-                    if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
+                if (name.isNotBlank() && dosageFloat != null && dosageFloat > 0) {
                         // Create MedicationLogEntity to save to database
                         val medicationLogEntity = MedicationLogEntity(
                             userId = userId,
-                            dateTime = LocalDateTime.of(date, time),
-                            period = period,
-                            notes = notes.ifBlank { null },
-                            name = name,
-                            dosage = dosageFloat,
-                            dosageUnit = dosageUnit
-                        )
+                        dateTime = LocalDateTime.of(date, time),
+                        period = period,
+                        notes = notes.ifBlank { null },
+                        name = name,
+                        dosage = dosageFloat,
+                        dosageUnit = dosageUnit
+                    )
 
                         // Save to database
                         logViewModel.insertMedicationLog(medicationLogEntity)
@@ -2006,12 +2006,12 @@ fun MedicationLogForm(
                         navController?.navigate("diary") {
                             popUpTo("log") { inclusive = true }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = name.isNotBlank() && dosage.isNotBlank() && dosage.toFloatOrNull() != null
-            ) {
-                Text("Save Medication Log")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = name.isNotBlank() && dosage.isNotBlank() && dosage.toFloatOrNull() != null
+        ) {
+            Text("Save Medication Log")
             }
         }
     }

@@ -11,11 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LogViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: LogRepository
-
-    init {
-        repository = LogRepository(application)
-    }
+    // Get repository from application class (single instance shared across app)
+    private val repository: LogRepository = 
+        (application as GlucoseDiaryApplication).logRepository
 
     suspend fun getDietLogById(logId: Int): DietLogEntity? {
         return repository.getDietLogById(logId)

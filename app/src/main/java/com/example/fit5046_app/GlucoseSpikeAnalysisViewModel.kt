@@ -16,7 +16,9 @@ import java.time.LocalDateTime
 
 class GlucoseSpikeAnalysisViewModel(application: Application) : AndroidViewModel(application) {
     
-    private val repository: LogRepository = LogRepository(application)
+    // Get repository from application class (single shared instance)
+    private val repository: LogRepository = 
+        (application as GlucoseDiaryApplication).logRepository
     private val analysisService: GlucoseSpikeAnalysisService = GlucoseSpikeAnalysisService()
     private val auth = FirebaseAuth.getInstance()
     
