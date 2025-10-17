@@ -46,6 +46,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import com.example.fit5046_app.NewsRepository
+import kotlinx.coroutines.runBlocking
 
 // Data class for blog articles
 data class BlogArticle(
@@ -59,7 +61,8 @@ data class BlogArticle(
     val readTime: String,
     val likes: Int = 0,
     val views: Int = 0,
-    val imageEmoji: String
+    val imageEmoji: String,
+    val articleUrl: String = "" // NEW FIELD
 )
 
 @Composable
@@ -125,10 +128,17 @@ fun BlogArticleCard(
     onShare: () -> Unit,
     onRead: () -> Unit
 ) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onRead() },
+            .clickable {
+                if (article.articleUrl.isNotEmpty()) {
+                    uriHandler.openUri(article.articleUrl)
+                }
+                onRead()
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(16.dp)
@@ -269,7 +279,14 @@ fun BlogArticleCard(
                 }
 
                 // Share Button
-                IconButton(onClick = onShare) {
+                IconButton(
+                    onClick = {
+                        if (article.articleUrl.isNotEmpty()) {
+                            uriHandler.openUri(article.articleUrl)
+                        }
+                        onShare()
+                    }
+                ) {
                     Icon(
                         Icons.Default.Share,
                         contentDescription = "Share",
@@ -283,78 +300,8 @@ fun BlogArticleCard(
 
 // Sample data
 fun getSampleArticles(): List<BlogArticle> {
-    return listOf(
-        BlogArticle(
-            title = "Understanding Blood Sugar Levels: A Complete Guide",
-            excerpt = "Learn about normal blood sugar ranges, how to monitor your levels, and what factors can affect your glucose readings throughout the day.",
-            content = "Full article content about blood sugar levels...",
-            author = "Dr. Sarah Johnson",
-            publishDate = Date(System.currentTimeMillis() - 86400000), // 1 day ago
-            category = "Diabetes",
-            readTime = "5 min",
-            likes = 42,
-            views = 1250,
-            imageEmoji = "🩸"
-        ),
-        BlogArticle(
-            title = "10 Superfoods for Better Health",
-            excerpt = "Discover the most nutrient-dense foods that can boost your immune system, improve heart health, and provide essential vitamins and minerals.",
-            content = "Full article content about superfoods...",
-            author = "Nutritionist Mike Chen",
-            publishDate = Date(System.currentTimeMillis() - 172800000), // 2 days ago
-            category = "Nutrition",
-            readTime = "7 min",
-            likes = 38,
-            views = 980,
-            imageEmoji = "🥗"
-        ),
-        BlogArticle(
-            title = "The Mental Health Benefits of Regular Exercise",
-            excerpt = "Explore how physical activity can reduce stress, anxiety, and depression while boosting your mood and cognitive function.",
-            content = "Full article content about exercise and mental health...",
-            author = "Dr. Emily Rodriguez",
-            publishDate = Date(System.currentTimeMillis() - 259200000), // 3 days ago
-            category = "Mental Health",
-            readTime = "6 min",
-            likes = 55,
-            views = 1450,
-            imageEmoji = "🧠"
-        ),
-        BlogArticle(
-            title = "Morning Workout Routines for Busy People",
-            excerpt = "Quick and effective exercise routines that fit into your morning schedule, helping you start the day with energy and focus.",
-            content = "Full article content about morning workouts...",
-            author = "Fitness Coach Alex Thompson",
-            publishDate = Date(System.currentTimeMillis() - 345600000), // 4 days ago
-            category = "Exercise",
-            readTime = "4 min",
-            likes = 29,
-            views = 750,
-            imageEmoji = "🏃"
-        ),
-        BlogArticle(
-            title = "Stress Management Techniques for Better Health",
-            excerpt = "Learn practical strategies to reduce stress, improve sleep quality, and maintain emotional well-being in today's fast-paced world.",
-            content = "Full article content about stress management...",
-            author = "Wellness Expert Lisa Park",
-            publishDate = Date(System.currentTimeMillis() - 432000000), // 5 days ago
-            category = "Wellness",
-            readTime = "8 min",
-            likes = 67,
-            views = 1890,
-            imageEmoji = "🧘"
-        ),
-        BlogArticle(
-            title = "Diabetes-Friendly Meal Planning",
-            excerpt = "Simple meal planning strategies to help manage blood sugar levels while enjoying delicious and nutritious foods.",
-            content = "Full article content about diabetes meal planning...",
-            author = "Registered Dietitian Maria Garcia",
-            publishDate = Date(System.currentTimeMillis() - 518400000), // 6 days ago
-            category = "Diabetes",
-            readTime = "9 min",
-            likes = 73,
-            views = 2100,
-            imageEmoji = "🍽️"
-        )
-    )
+    val repository = NewsRepository()
+    return runBlocking {
+        repository.fetchDiabetesNews()
+    }
 }

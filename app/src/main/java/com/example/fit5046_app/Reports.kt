@@ -58,6 +58,11 @@ import java.util.Date
 import java.util.Locale
 import com.example.fit5046_app.util.ReportDownloader
 import com.example.fit5046_app.util.EmailShareDialog
+import com.example.fit5046_app.util.ReportPdfGenerator
+import android.util.Log
+import android.content.Intent
+import androidx.core.content.FileProvider
+import android.net.Uri
 
 
 @Preview(showBackground = true)
@@ -88,11 +93,41 @@ fun Reports(navController: androidx.navigation.NavController? = null) {
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                    onDownloadClick = { ReportDownloader.saveReportAsPdf(context, logs.value) },
-                    onShareClick = {val file = ReportDownloader.saveReportAsPdf(context, logs.value)
-                        if (file != null) {
-                            EmailShareDialog.shareReport(context, file)
-                        } }
+                    onDownloadClick = {
+                        Log.d("ReportsDebug", "===== DOWNLOAD BUTTON CLICKED =====")
+                        ReportPdfGenerator.generateHealthReport(
+                            context,
+                            reportsData.glucoseAnalysis,
+                            reportsData.dietAnalysis,
+                            reportsData.exerciseAnalysis
+                        )
+                    },
+                    onShareClick = {
+                        val pdfFile = ReportPdfGenerator.generateHealthReport(
+                            context,
+                            reportsData.glucoseAnalysis,
+                            reportsData.dietAnalysis,
+                            reportsData.exerciseAnalysis
+                        )
+
+                        if (pdfFile != null) {
+                            val pdfUri = androidx.core.content.FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider",
+                                pdfFile
+                            )
+
+                            val shareIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_STREAM, pdfUri)
+                                type = "application/pdf"
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+
+                            context.startActivity(Intent.createChooser(shareIntent, "Share Health Report"))
+                        }
+                    }
+
                 )
             },
             floatingActionButton = {
@@ -108,8 +143,8 @@ fun Reports(navController: androidx.navigation.NavController? = null) {
             },
             floatingActionButtonPosition = FabPosition.End
 
-        ) { _ ->
-            Box() {
+        ) { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
