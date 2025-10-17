@@ -25,14 +25,18 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fit5046_app.ui.theme.AppPrimary
+import com.example.fit5046_app.service.UserContext
+import com.example.fit5046_app.service.UserProfile
+import com.example.fit5046_app.service.MealCalories
 import kotlinx.coroutines.launch
 
 @Composable
 fun FloatingChatBot(
     isVisible: Boolean,
     onDismiss: () -> Unit,
-    viewModel: ChatBotViewModel = viewModel()
+    viewModel: ContextAwareChatBotViewModel = viewModel()
 ) {
+    android.util.Log.d("FloatingChatBot", "FloatingChatBot composable called with isVisible: $isVisible")
     if (isVisible) {
         Dialog(
             onDismissRequest = onDismiss,
@@ -54,8 +58,9 @@ fun FloatingChatBot(
 @Composable
 fun FloatingChatBotContent(
     onDismiss: () -> Unit,
-    viewModel: ChatBotViewModel = viewModel()
+    viewModel: ContextAwareChatBotViewModel = viewModel()
 ) {
+    android.util.Log.d("FloatingChatBot", "FloatingChatBotContent composable called")
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -185,8 +190,14 @@ fun FloatingChatBotContent(
 
                     FloatingActionButton(
                         onClick = {
+                            android.util.Log.d("FloatingChatBot", "Send button clicked")
+                            android.util.Log.d("FloatingChatBot", "Input text: '${uiState.inputText}'")
+                            android.util.Log.d("FloatingChatBot", "Is loading: ${uiState.isLoading}")
                             if (uiState.inputText.isNotBlank() && !uiState.isLoading) {
+                                android.util.Log.d("FloatingChatBot", "Calling viewModel.sendMessage()")
                                 viewModel.sendMessage()
+                            } else {
+                                android.util.Log.d("FloatingChatBot", "Send conditions not met")
                             }
                         },
                         modifier = Modifier.size(40.dp),
