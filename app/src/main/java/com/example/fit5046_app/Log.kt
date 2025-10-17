@@ -1092,8 +1092,8 @@ fun DietLogForm(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
                     Text("Delete Diet Log")
@@ -1366,8 +1366,8 @@ fun BloodGlucoseLogForm(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
                     Text("Delete Blood Glucose Log")
@@ -1690,8 +1690,8 @@ fun ExerciseLogForm(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
                     Text("Delete Exercise Log")
@@ -1966,8 +1966,8 @@ fun MedicationLogForm(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
                     Text("Delete Medication Log")
