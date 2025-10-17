@@ -10,9 +10,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.abs
 
-/**
- * Service for analyzing glucose spikes and correlating them with food intake
- */
+
 class GlucoseSpikeAnalysisService {
     
     companion object {
@@ -21,6 +19,7 @@ class GlucoseSpikeAnalysisService {
         // Normal glucose range (mmol/L)
         private const val GLUCOSE_LOWER_NORMAL = 4.0f // 4.0 mmol/L
         private const val GLUCOSE_UPPER_NORMAL = 7.8f // 7.8 mmol/L
+        private const val GLUCOSE_SPIKE_THRESHOLD = 7.8f // Only show spikes > 7.8 mmol/L
         
         // Spike detection parameters
         private const val BASELINE_WINDOW_HOURS = 2L // Look back 2 hours for baseline
@@ -28,9 +27,7 @@ class GlucoseSpikeAnalysisService {
         private const val MIN_GLUCOSE_READINGS_FOR_ANALYSIS = 3 // Minimum readings needed for analysis
     }
     
-    /**
-     * Result of glucose spike analysis
-     */
+    
     data class GlucoseSpikeAnalysisResult(
         val spikes: List<GlucoseSpike>,
         val foodCorrelations: List<FoodGlucoseCorrelation>,
@@ -41,9 +38,7 @@ class GlucoseSpikeAnalysisService {
         val timeInRange: Float // Percentage of time glucose was in target range (4.0-7.8 mmol/L)
     )
     
-    /**
-     * Represents a detected glucose spike
-     */
+   
     data class GlucoseSpike(
         val spikeTime: LocalDateTime,
         val spikeValue: Float,
@@ -54,9 +49,7 @@ class GlucoseSpikeAnalysisService {
         val confidence: Float // Confidence in spike detection (0-1)
     )
     
-    /**
-     * Correlation between specific foods and glucose spikes
-     */
+    
     data class FoodGlucoseCorrelation(
         val foodItem: String,
         val correlationScore: Float, // -1 to 1, where 1 is strong positive correlation
@@ -67,9 +60,6 @@ class GlucoseSpikeAnalysisService {
         val recommendation: FoodRecommendationType
     )
     
-    /**
-     * Food recommendation based on analysis
-     */
     data class FoodRecommendation(
         val foodItem: String,
         val recommendationType: FoodRecommendationType,
@@ -79,10 +69,10 @@ class GlucoseSpikeAnalysisService {
     )
     
     enum class FoodRecommendationType {
-        AVOID, // Strong correlation with spikes
-        MODERATE, // Moderate correlation, consume in smaller portions
-        SAFE, // No significant correlation with spikes
-        BENEFICIAL // May help stabilize glucose
+        AVOID, 
+        MODERATE, 
+        SAFE, 
+        BENEFICIAL 
     }
     
     data class AnalysisPeriod(
@@ -91,9 +81,6 @@ class GlucoseSpikeAnalysisService {
         val daysAnalyzed: Int
     )
     
-    /**
-     * Main analysis function that processes glucose and diet data
-     */
     suspend fun analyzeGlucoseSpikes(
         glucoseLogs: List<BloodGlucoseLogEntity>,
         dietLogs: List<DietLogEntity>
@@ -101,7 +88,7 @@ class GlucoseSpikeAnalysisService {
         
         Log.d(TAG, "Starting glucose spike analysis with ${glucoseLogs.size} glucose readings and ${dietLogs.size} diet entries")
         
-        // Log some sample glucose values for debugging
+        
         glucoseLogs.take(5).forEach { log ->
             Log.d(TAG, "Sample glucose: ${log.value} mmol/L at ${log.dateTime}")
         }
@@ -111,28 +98,28 @@ class GlucoseSpikeAnalysisService {
             return@withContext createEmptyResult(glucoseLogs, dietLogs)
         }
         
-        // Sort data by time
+        // Sort
         val sortedGlucoseLogs = glucoseLogs.sortedBy { it.dateTime }
         val sortedDietLogs = dietLogs.sortedBy { it.dateTime }
         
-        // Detect glucose spikes
+        // Detect
         val spikes = detectGlucoseSpikes(sortedGlucoseLogs)
         Log.d(TAG, "Detected ${spikes.size} glucose spikes")
         
-        // Log details of detected spikes
+        // Log 
         spikes.forEach { spike ->
             Log.d(TAG, "Spike: ${spike.spikeValue} mmol/L at ${spike.spikeTime}, magnitude: ${spike.spikeMagnitude}")
         }
         
-        // Correlate spikes with food intake
+        
         val foodCorrelations = correlateFoodWithSpikes(spikes, sortedDietLogs)
         Log.d(TAG, "Analyzed correlations for ${foodCorrelations.size} food items")
         
-        // Generate recommendations
+        
         val recommendations = generateFoodRecommendations(foodCorrelations)
         Log.d(TAG, "Generated ${recommendations.size} food recommendations")
         
-        // Calculate additional metrics
+        
         val analysisPeriod = calculateAnalysisPeriod(sortedGlucoseLogs)
         val averageGlucose = calculateAverageGlucose(sortedGlucoseLogs)
         val timeInRange = calculateTimeInRange(sortedGlucoseLogs)
@@ -148,9 +135,7 @@ class GlucoseSpikeAnalysisService {
         )
     }
     
-    /**
-     * Detect glucose spikes by comparing current reading with baseline
-     */
+    
     private fun detectGlucoseSpikes(glucoseLogs: List<BloodGlucoseLogEntity>): List<GlucoseSpike> {
         val spikes = mutableListOf<GlucoseSpike>()
         
@@ -160,13 +145,11 @@ class GlucoseSpikeAnalysisService {
         for (i in 1 until glucoseLogs.size) {
             val currentReading = glucoseLogs[i]
             
-            // First check: Is the current reading above normal range?
-            val isAboveNormal = currentReading.value > GLUCOSE_UPPER_NORMAL
+            val isAboveThreshold = currentReading.value > GLUCOSE_SPIKE_THRESHOLD
             
-            if (isAboveNormal) {
-                Log.d(TAG, "Found spike above normal: ${currentReading.value} mmol/L at ${currentReading.dateTime}")
+            if (isAboveThreshold) {
+                Log.d(TAG, "Found spike above threshold: ${currentReading.value} mmol/L at ${currentReading.dateTime}")
                 
-                // Try to find baseline, but don't require it for above-normal readings
                 val baselineReadings = glucoseLogs.filter { reading ->
                     val timeDiff = ChronoUnit.HOURS.between(reading.dateTime, currentReading.dateTime)
                     timeDiff in 1..BASELINE_WINDOW_HOURS && reading.dateTime < currentReading.dateTime
@@ -195,7 +178,6 @@ class GlucoseSpikeAnalysisService {
                 spikes.add(spike)
                 Log.d(TAG, "Added spike: ${spike.spikeValue} mmol/L, magnitude: ${spike.spikeMagnitude}")
             } else {
-                // Check for significant increases even if not above normal
                 val baselineReadings = glucoseLogs.filter { reading ->
                     val timeDiff = ChronoUnit.HOURS.between(reading.dateTime, currentReading.dateTime)
                     timeDiff in 1..BASELINE_WINDOW_HOURS && reading.dateTime < currentReading.dateTime
@@ -232,9 +214,7 @@ class GlucoseSpikeAnalysisService {
         return spikes
     }
     
-    /**
-     * Correlate food items with glucose spikes
-     */
+    
     private fun correlateFoodWithSpikes(
         spikes: List<GlucoseSpike>,
         dietLogs: List<DietLogEntity>
@@ -243,14 +223,12 @@ class GlucoseSpikeAnalysisService {
         val foodSpikeMap = mutableMapOf<String, MutableList<Float>>()
         val foodConsumptionMap = mutableMapOf<String, MutableList<LocalDateTime>>()
         
-        // Track all food consumption
         dietLogs.forEach { dietLog ->
             dietLog.foodItems?.forEach { foodItem ->
                 foodConsumptionMap.getOrPut(foodItem) { mutableListOf() }.add(dietLog.dateTime)
             }
         }
         
-        // For each spike, find foods consumed within correlation window
         spikes.forEach { spike ->
             val foodsBeforeSpike = dietLogs.filter { dietLog ->
                 val timeDiff = ChronoUnit.HOURS.between(dietLog.dateTime, spike.spikeTime)
@@ -264,7 +242,6 @@ class GlucoseSpikeAnalysisService {
             }
         }
         
-        // Calculate correlations for each food
         return foodConsumptionMap.map { (foodItem, consumptionTimes) ->
             val spikeMagnitudes = foodSpikeMap[foodItem] ?: emptyList()
             val spikeFrequency = if (consumptionTimes.isNotEmpty()) {
@@ -290,9 +267,7 @@ class GlucoseSpikeAnalysisService {
         }.sortedByDescending { it.correlationScore }
     }
     
-    /**
-     * Generate food recommendations based on correlations
-     */
+    
     private fun generateFoodRecommendations(
         correlations: List<FoodGlucoseCorrelation>
     ): List<FoodRecommendation> {
@@ -301,20 +276,27 @@ class GlucoseSpikeAnalysisService {
         val uniqueCorrelations = correlations
             .groupBy { it.foodItem }
             .mapValues { (_, correlationsForFood) ->
-                // Take the correlation with the highest absolute correlation score
                 correlationsForFood.maxByOrNull { abs(it.correlationScore) } ?: correlationsForFood.first()
             }
             .values
             .sortedByDescending { abs(it.correlationScore) }
         
         return uniqueCorrelations.map { correlation ->
+            val baselineGlucose = 5.5f
+            val peakGlucose = baselineGlucose + (correlation.averageSpikeMagnitude)
+            val percentageIncrease = if (baselineGlucose > 0) {
+                ((peakGlucose - baselineGlucose) / baselineGlucose) * 100f
+            } else 0f
+            
+            val cappedPercentage = percentageIncrease.coerceAtMost(100f)
+            
             val (reason, alternatives) = when (correlation.recommendation) {
                 FoodRecommendationType.AVOID -> {
-                    "Strong correlation with glucose spikes (${(correlation.spikeFrequency * 100).toInt()}% spike rate)" to
+                    "Strong correlation with glucose spikes (${(correlation.spikeFrequency * 100).toInt()}% spike rate, +${cappedPercentage.toInt()}% glucose increase)" to
                     listOf("Consider low-carb alternatives", "Reduce portion size", "Consume with protein")
                 }
                 FoodRecommendationType.MODERATE -> {
-                    "Moderate correlation with glucose spikes (${(correlation.spikeFrequency * 100).toInt()}% spike rate)" to
+                    "Moderate correlation with glucose spikes (${(correlation.spikeFrequency * 100).toInt()}% spike rate, +${cappedPercentage.toInt()}% glucose increase)" to
                     listOf("Monitor portion size", "Pair with fiber-rich foods", "Test blood glucose after consumption")
                 }
                 FoodRecommendationType.SAFE -> {
@@ -337,18 +319,16 @@ class GlucoseSpikeAnalysisService {
         }
     }
     
-    // Helper functions
+    // Helper 
     private fun findPossibleFoodCauses(
         spikeTime: LocalDateTime,
         glucoseLogs: List<BloodGlucoseLogEntity>
     ): List<String> {
-        // This would be enhanced to look at actual diet logs
-        // For now, return empty list
+      
         return emptyList()
     }
     
     private fun calculateSpikeConfidence(spikeMagnitude: Float, baselineSampleSize: Int): Float {
-        // Higher confidence for larger spikes and more baseline data
         val normalRange = GLUCOSE_UPPER_NORMAL - GLUCOSE_LOWER_NORMAL
         val magnitudeFactor = minOf(spikeMagnitude / normalRange, 2.0f)
         val sampleFactor = minOf(baselineSampleSize / 3.0f, 1.0f)
@@ -359,17 +339,24 @@ class GlucoseSpikeAnalysisService {
         spikeReading: BloodGlucoseLogEntity,
         glucoseLogs: List<BloodGlucoseLogEntity>
     ): Long {
-        // Find when glucose returns to baseline
         val subsequentReadings = glucoseLogs.filter { it.dateTime > spikeReading.dateTime }
-        // Simplified: return 60 minutes as default
         return 60L
     }
     
     private fun calculateCorrelationScore(spikeFrequency: Float, averageSpikeMagnitude: Float): Float {
-        // Combine frequency and magnitude into a correlation score
-        val frequencyScore = spikeFrequency * 2 - 1 // Convert 0-1 to -1 to 1
-        val normalRange = GLUCOSE_UPPER_NORMAL - GLUCOSE_LOWER_NORMAL
-        val magnitudeScore = (averageSpikeMagnitude / normalRange).coerceIn(-1f, 1f)
+       val frequencyScore = spikeFrequency * 2 - 1 // Convert 0-1 to -1 to 1
+        
+        val baselineGlucose = 5.5f // Normal fasting glucose baseline
+        val peakGlucose = baselineGlucose + averageSpikeMagnitude
+        
+        val percentageIncrease = if (baselineGlucose > 0) {
+            ((peakGlucose - baselineGlucose) / baselineGlucose) * 100f
+        } else 0f
+        
+        val cappedPercentage = percentageIncrease.coerceAtMost(100f)
+        
+        val magnitudeScore = (cappedPercentage / 100f).coerceIn(-1f, 1f)
+        
         return (frequencyScore + magnitudeScore) / 2f
     }
     

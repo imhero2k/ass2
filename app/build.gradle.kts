@@ -74,6 +74,9 @@ dependencies {
     implementation(libs.camerax.view)
     implementation(libs.activity.compose)
     
+    
+    implementation(libs.mpandroidchart)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

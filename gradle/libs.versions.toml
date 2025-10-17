@@ -19,6 +19,7 @@ ksp = "2.0.21-1.0.26"
 googleServices = "4.4.2"
 mlKit = "17.0.0"
 cameraX = "1.4.0"
+mpAndroidChart = "3.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,6 +57,7 @@ camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "ca
 camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraX" }
 camerax-view = { module = "androidx.camera:camera-view", version.ref = "cameraX" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpAndroidChart" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

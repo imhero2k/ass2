@@ -26,6 +26,8 @@ import com.example.fit5046_app.model.ReminderDayOfWeek
 import com.example.fit5046_app.ui.theme.FIT5046_appTheme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Composable
@@ -117,27 +119,30 @@ fun Dashboard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {}) {
+            IconButton(onClick = { viewModel.goToPreviousDay() }) {
                 Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous",
                     tint = MaterialTheme.colorScheme.primary)
             }
 
             Text(
-                text = "Today",
+                text = if (dashboardData.selectedDate == LocalDate.now()) {
+                    "Today"
+                } else {
+                    dashboardData.selectedDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                },
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Row {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.DateRange, contentDescription = "Calendar",
-                        tint = MaterialTheme.colorScheme.primary)
-                }
-                IconButton(onClick = {}) {
+            if (viewModel.canGoForward()) {
+                IconButton(onClick = { viewModel.goToNextDay() }) {
                     Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next",
                         tint = MaterialTheme.colorScheme.primary)
                 }
+            } else {
+                // Empty space to maintain layout balance
+                Spacer(modifier = Modifier.width(48.dp))
             }
         }
 
@@ -298,49 +303,6 @@ fun Dashboard(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Weekly Glucose Chart
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Weekly Glucose Average",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        WeeklyGlucoseChart(weeklyTrend = dashboardData.weeklyTrend)
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                // Meal Calories Chart
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Today's Meal Calories",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        MealCaloriesChart(mealCalories = dashboardData.mealCalories)
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -349,13 +311,13 @@ fun Dashboard(
                     SummaryCard(
                         icon = "🩺",
                         title = "Blood Sugar",
-                        subtitle = "Last reading: Today",
+                        subtitle = "Last reading: ${if (dashboardData.selectedDate == LocalDate.now()) "Today" else dashboardData.selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))}",
                         value = dashboardData.latestGlucose?.let { String.format("%.1f mmol/L", it) } ?: "No data",
                         modifier = Modifier.weight(1f)
                     )
                     SummaryCard(
                         icon = "🔥",
-                        title = "Today's Calories",
+                        title = "${if (dashboardData.selectedDate == LocalDate.now()) "Today's" else dashboardData.selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))} Calories",
                         subtitle = "Total intake",
                         value = "${dashboardData.todayCalories} cal",
                         modifier = Modifier.weight(1f)
@@ -371,14 +333,14 @@ fun Dashboard(
                     SummaryCard(
                         icon = "🏃",
                         title = "Exercise",
-                        subtitle = "Today's activity",
+                        subtitle = "${if (dashboardData.selectedDate == LocalDate.now()) "Today's" else dashboardData.selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))} activity",
                         value = "${dashboardData.exerciseMinutes} min",
                         modifier = Modifier.weight(1f)
                     )
                     SummaryCard(
                         icon = "💊",
                         title = "Medication",
-                        subtitle = "Today's doses",
+                        subtitle = "${if (dashboardData.selectedDate == LocalDate.now()) "Today's" else dashboardData.selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))} doses",
                         value = "${dashboardData.medicationCount} doses",
                         modifier = Modifier.weight(1f)
                     )
