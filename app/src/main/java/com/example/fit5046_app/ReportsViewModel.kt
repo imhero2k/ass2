@@ -20,6 +20,15 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
     
     private val currentUserId = auth.currentUser?.uid ?: "anonymous"
     
+    // Date range state
+    private val _selectedDateRange = MutableStateFlow(
+        Pair(
+            java.time.LocalDate.now().minusDays(6), // Start: 7 days ago
+            java.time.LocalDate.now() // End: today
+        )
+    )
+    val selectedDateRange = _selectedDateRange.asStateFlow()
+    
     // Data flows
     val bloodGlucoseLogs = repository.getAllBloodGlucoseLogs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -38,22 +47,28 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
         bloodGlucoseLogs,
         dietLogs,
         exerciseLogs,
-        medicationLogs
-    ) { glucoseLogs, dietLogs, exerciseLogs, medicationLogs ->
+        medicationLogs,
+        selectedDateRange
+    ) { glucoseLogs, dietLogs, exerciseLogs, medicationLogs, dateRange ->
         ReportsData(
-            glucoseAnalysis = getGlucoseAnalysis(glucoseLogs),
-            dietAnalysis = getDietAnalysis(dietLogs),
-            exerciseAnalysis = getExerciseAnalysis(exerciseLogs)
+            glucoseAnalysis = getGlucoseAnalysis(glucoseLogs, dateRange),
+            dietAnalysis = getDietAnalysis(dietLogs, dateRange),
+            exerciseAnalysis = getExerciseAnalysis(exerciseLogs, dateRange)
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportsData())
     
-    private fun getGlucoseAnalysis(logs: List<BloodGlucoseLogEntity>): GlucoseAnalysis {
+    fun updateDateRange(startDate: java.time.LocalDate, endDate: java.time.LocalDate) {
+        _selectedDateRange.value = Pair(startDate, endDate)
+    }
+    
+    private fun getGlucoseAnalysis(logs: List<BloodGlucoseLogEntity>, dateRange: Pair<java.time.LocalDate, java.time.LocalDate>): GlucoseAnalysis {
         val userLogs = logs.filter { it.userId == currentUserId }
-        val last7Days = userLogs.filter { 
-            it.dateTime.toLocalDate().isAfter(LocalDate.now().minusDays(7)) 
+        val filteredLogs = userLogs.filter { 
+            val logDate = it.dateTime.toLocalDate()
+            logDate.isAfter(dateRange.first.minusDays(1)) && logDate.isBefore(dateRange.second.plusDays(1))
         }
         
-        if (last7Days.isEmpty()) {
+        if (filteredLogs.isEmpty()) {
             return GlucoseAnalysis(
                 averageGlucose = 0f,
                 goodReadings = 0,
@@ -64,16 +79,17 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
             )
         }
         
-        val averageGlucose = last7Days.map { it.value }.average().toFloat()
-        val goodReadings = last7Days.count { it.value in 4f..7f }
-        val highReadings = last7Days.count { it.value > 7f }
-        val lowReadings = last7Days.count { it.value < 4f }
-        val totalReadings = last7Days.size
+        val averageGlucose = filteredLogs.map { it.value }.average().toFloat()
+        val goodReadings = filteredLogs.count { it.value in 4f..7f }
+        val highReadings = filteredLogs.count { it.value > 7f }
+        val lowReadings = filteredLogs.count { it.value < 4f }
+        val totalReadings = filteredLogs.size
         
-        // Calculate daily averages for the last 7 days
-        val dailyAverages = (0..6).map { daysBack ->
-            val date = LocalDate.now().minusDays(daysBack.toLong())
-            val dayLogs = last7Days.filter { it.dateTime.toLocalDate() == date }
+        // Calculate daily averages for the selected date range
+        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(dateRange.first, dateRange.second).toInt()
+        val dailyAverages = (0..daysBetween).map { dayOffset ->
+            val date = dateRange.first.plusDays(dayOffset.toLong())
+            val dayLogs = filteredLogs.filter { it.dateTime.toLocalDate() == date }
             val dayAverage = if (dayLogs.isNotEmpty()) {
                 dayLogs.map { it.value }.average().toFloat()
             } else null
@@ -82,7 +98,7 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
                 date = date,
                 average = dayAverage
             )
-        }.reversed()
+        }
         
         return GlucoseAnalysis(
             averageGlucose = averageGlucose,
@@ -94,13 +110,14 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
         )
     }
     
-    private fun getDietAnalysis(logs: List<DietLogEntity>): DietAnalysis {
+    private fun getDietAnalysis(logs: List<DietLogEntity>, dateRange: Pair<java.time.LocalDate, java.time.LocalDate>): DietAnalysis {
         val userLogs = logs.filter { it.userId == currentUserId }
-        val last7Days = userLogs.filter { 
-            it.dateTime.toLocalDate().isAfter(LocalDate.now().minusDays(7)) 
+        val filteredLogs = userLogs.filter { 
+            val logDate = it.dateTime.toLocalDate()
+            logDate.isAfter(dateRange.first.minusDays(1)) && logDate.isBefore(dateRange.second.plusDays(1))
         }
         
-        if (last7Days.isEmpty()) {
+        if (filteredLogs.isEmpty()) {
             return DietAnalysis(
                 averageDailyCalories = 0,
                 averageCarbs = 0f,
@@ -110,28 +127,29 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
             )
         }
         
-        val totalCalories = last7Days.sumOf { it.calories ?: 0 }
-        val totalCarbs = last7Days.sumOf { it.carbGrams?.toDouble() ?: 0.0 }.toFloat()
-        val totalProtein = last7Days.sumOf { it.proteinGrams?.toDouble() ?: 0.0 }.toFloat()
-        val totalFats = last7Days.sumOf { it.fatGrams?.toDouble() ?: 0.0 }.toFloat()
+        val totalCalories = filteredLogs.sumOf { it.calories ?: 0 }
+        val totalCarbs = filteredLogs.sumOf { it.carbGrams?.toDouble() ?: 0.0 }.toFloat()
+        val totalProtein = filteredLogs.sumOf { it.proteinGrams?.toDouble() ?: 0.0 }.toFloat()
+        val totalFats = filteredLogs.sumOf { it.fatGrams?.toDouble() ?: 0.0 }.toFloat()
         
-        val daysWithData = last7Days.map { it.dateTime.toLocalDate() }.distinct().size
+        val daysWithData = filteredLogs.map { it.dateTime.toLocalDate() }.distinct().size
         val averageDailyCalories = if (daysWithData > 0) totalCalories / daysWithData else 0
         val averageCarbs = if (daysWithData > 0) totalCarbs / daysWithData else 0f
         val averageProtein = if (daysWithData > 0) totalProtein / daysWithData else 0f
         val averageFats = if (daysWithData > 0) totalFats / daysWithData else 0f
         
-        // Calculate daily calories for the last 7 days
-        val dailyCalories = (0..6).map { daysBack ->
-            val date = LocalDate.now().minusDays(daysBack.toLong())
-            val dayLogs = last7Days.filter { it.dateTime.toLocalDate() == date }
+        // Calculate daily calories for the selected date range
+        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(dateRange.first, dateRange.second).toInt()
+        val dailyCalories = (0..daysBetween).map { dayOffset ->
+            val date = dateRange.first.plusDays(dayOffset.toLong())
+            val dayLogs = filteredLogs.filter { it.dateTime.toLocalDate() == date }
             val dayCalories = dayLogs.sumOf { it.calories ?: 0 }
             
             DailyCalories(
                 date = date,
                 calories = dayCalories
             )
-        }.reversed()
+        }
         
         return DietAnalysis(
             averageDailyCalories = averageDailyCalories,
@@ -142,13 +160,14 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
         )
     }
     
-    private fun getExerciseAnalysis(logs: List<ExerciseLogEntity>): ExerciseAnalysis {
+    private fun getExerciseAnalysis(logs: List<ExerciseLogEntity>, dateRange: Pair<java.time.LocalDate, java.time.LocalDate>): ExerciseAnalysis {
         val userLogs = logs.filter { it.userId == currentUserId }
-        val last7Days = userLogs.filter { 
-            it.dateTime.toLocalDate().isAfter(LocalDate.now().minusDays(7)) 
+        val filteredLogs = userLogs.filter { 
+            val logDate = it.dateTime.toLocalDate()
+            logDate.isAfter(dateRange.first.minusDays(1)) && logDate.isBefore(dateRange.second.plusDays(1))
         }
         
-        if (last7Days.isEmpty()) {
+        if (filteredLogs.isEmpty()) {
             return ExerciseAnalysis(
                 totalMinutes = 0,
                 averageMinutesPerDay = 0f,
@@ -157,25 +176,26 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
             )
         }
         
-        val totalMinutes = last7Days.sumOf { it.durationMinutes }
-        val daysWithExercise = last7Days.map { it.dateTime.toLocalDate() }.distinct().size
+        val totalMinutes = filteredLogs.sumOf { it.durationMinutes }
+        val daysWithExercise = filteredLogs.map { it.dateTime.toLocalDate() }.distinct().size
         val averageMinutesPerDay = if (daysWithExercise > 0) totalMinutes.toFloat() / daysWithExercise else 0f
         
         // Count exercise types
-        val exerciseTypes = last7Days.groupBy { it.exerciseType }
+        val exerciseTypes = filteredLogs.groupBy { it.exerciseType }
             .mapValues { it.value.sumOf { exercise -> exercise.durationMinutes } }
         
-        // Calculate daily exercise minutes for the last 7 days
-        val dailyMinutes = (0..6).map { daysBack ->
-            val date = LocalDate.now().minusDays(daysBack.toLong())
-            val dayLogs = last7Days.filter { it.dateTime.toLocalDate() == date }
+        // Calculate daily exercise minutes for the selected date range
+        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(dateRange.first, dateRange.second).toInt()
+        val dailyMinutes = (0..daysBetween).map { dayOffset ->
+            val date = dateRange.first.plusDays(dayOffset.toLong())
+            val dayLogs = filteredLogs.filter { it.dateTime.toLocalDate() == date }
             val dayMinutes = dayLogs.sumOf { it.durationMinutes }
             
             DailyExercise(
                 date = date,
                 minutes = dayMinutes
             )
-        }.reversed()
+        }
         
         return ExerciseAnalysis(
             totalMinutes = totalMinutes,

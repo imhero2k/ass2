@@ -78,6 +78,7 @@ fun Reports(navController: androidx.navigation.NavController? = null) {
     val reportsViewModel: ReportsViewModel = viewModel()
     val logs = diaryViewModel.getAllLogs().collectAsState(initial = emptyList())
     val reportsData by reportsViewModel.reportsData.collectAsState()
+    val selectedDateRange by reportsViewModel.selectedDateRange.collectAsState()
 
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -147,25 +148,32 @@ fun Reports(navController: androidx.navigation.NavController? = null) {
                                 onClick = { navController?.navigate(SubRoutes.GLUCOSE_ANALYSIS) },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary
-                                )
+                                ),
+                                modifier = Modifier.size(width = 100.dp, height = 40.dp)
                             ) {
-                                Text("Analyze")
+                                Text(
+                                    text = "Run",
+                                    maxLines = 1
+                                )
                             }
                         }
                     }
                     
                     // Health Correlation Overview Chart
-                    HealthCorrelationCard(reportsData.glucoseAnalysis, reportsData.dietAnalysis, reportsData.exerciseAnalysis)
+                    HealthCorrelationCard(reportsData.glucoseAnalysis, reportsData.dietAnalysis, reportsData.exerciseAnalysis, selectedDateRange)
                     
-                    GlucoseChartCard(reportsData.glucoseAnalysis)
-                    DietChartCard(reportsData.dietAnalysis)
-                    ExerciseChartCard(reportsData.exerciseAnalysis)
+                    GlucoseChartCard(reportsData.glucoseAnalysis, selectedDateRange)
+                    DietChartCard(reportsData.dietAnalysis, selectedDateRange)
+                    ExerciseChartCard(reportsData.exerciseAnalysis, selectedDateRange)
                 }
             }
         }
 
         if (showDateRangePicker) {
-            val dateRangeState = androidx.compose.material3.rememberDateRangePickerState()
+            val dateRangeState = androidx.compose.material3.rememberDateRangePickerState(
+                initialSelectedStartDateMillis = selectedDateRange.first.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                initialSelectedEndDateMillis = selectedDateRange.second.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            )
             val dateFormat = remember { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()) }
             val headlineText = when {
                 dateRangeState.selectedStartDateMillis != null && dateRangeState.selectedEndDateMillis != null ->
@@ -181,7 +189,19 @@ fun Reports(navController: androidx.navigation.NavController? = null) {
             DatePickerDialog(
                 onDismissRequest = { showDateRangePicker = false },
                 confirmButton = {
-                    TextButton(onClick = { showDateRangePicker = false }) {
+                    TextButton(onClick = { 
+                        // Update the date range in ViewModel
+                        if (dateRangeState.selectedStartDateMillis != null && dateRangeState.selectedEndDateMillis != null) {
+                            val startDate = java.time.Instant.ofEpochMilli(dateRangeState.selectedStartDateMillis!!)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .toLocalDate()
+                            val endDate = java.time.Instant.ofEpochMilli(dateRangeState.selectedEndDateMillis!!)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .toLocalDate()
+                            reportsViewModel.updateDateRange(startDate, endDate)
+                        }
+                        showDateRangePicker = false 
+                    }) {
                         Text("OK")
                     }
                 },
@@ -249,7 +269,8 @@ fun BottomButtonsContainer(
 fun HealthCorrelationCard(
     glucoseAnalysis: GlucoseAnalysis,
     dietAnalysis: DietAnalysis,
-    exerciseAnalysis: ExerciseAnalysis
+    exerciseAnalysis: ExerciseAnalysis,
+    dateRange: Pair<java.time.LocalDate, java.time.LocalDate>
 ) {
     Card(
         Modifier
@@ -284,7 +305,7 @@ fun HealthCorrelationCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "7-Day Overview: Glucose, Diet & Exercise Patterns",
+                        text = "${dateRange.first.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - ${dateRange.second.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))}: Glucose, Diet & Exercise Patterns",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         maxLines = 1
@@ -297,11 +318,11 @@ fun HealthCorrelationCard(
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
             )
 
-            // Correlation Chart
-            HealthCorrelationChart(
+            HealthCorrelationMPChart(
                 glucoseAnalysis = glucoseAnalysis,
                 dietAnalysis = dietAnalysis,
                 exerciseAnalysis = exerciseAnalysis,
+                dateRange = dateRange,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -309,7 +330,7 @@ fun HealthCorrelationCard(
 }
 
 @Composable
-fun GlucoseChartCard(glucoseAnalysis: GlucoseAnalysis) {
+fun GlucoseChartCard(glucoseAnalysis: GlucoseAnalysis, dateRange: Pair<java.time.LocalDate, java.time.LocalDate>) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -343,7 +364,7 @@ fun GlucoseChartCard(glucoseAnalysis: GlucoseAnalysis) {
 
                     // Average Glucose
                     Text(
-                        text = "Past 7 Days - All Periods",
+                        text = "${dateRange.first.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - ${dateRange.second.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - All Periods",
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1
                     )
@@ -362,14 +383,12 @@ fun GlucoseChartCard(glucoseAnalysis: GlucoseAnalysis) {
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
 
-            // Stats Table and Chart
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Side: Table
                 Column(
                     modifier = Modifier
                         .weight(0.4f)
@@ -381,14 +400,16 @@ fun GlucoseChartCard(glucoseAnalysis: GlucoseAnalysis) {
                     GlucoseStatRow(label = "Total", count = glucoseAnalysis.totalReadings)
                 }
 
-                // Right Side: Chart
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    GlucoseTrendChart(glucoseAnalysis.dailyAverages)
+                    GlucoseTrendMPChart(
+                        dailyAverages = glucoseAnalysis.dailyAverages,
+                        dateRange = dateRange
+                    )
                 }
             }
         }
@@ -431,7 +452,7 @@ fun GlucoseStatRow(label: String, count: Int) {
 }
 
 @Composable
-fun DietChartCard(dietAnalysis: DietAnalysis) {
+fun DietChartCard(dietAnalysis: DietAnalysis, dateRange: Pair<java.time.LocalDate, java.time.LocalDate>) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -463,9 +484,8 @@ fun DietChartCard(dietAnalysis: DietAnalysis) {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Average Daily Calories
                     Text(
-                        text = "Past 7 Days - All Periods",
+                        text = "${dateRange.first.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - ${dateRange.second.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - All Periods",
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1
                     )
@@ -486,14 +506,12 @@ fun DietChartCard(dietAnalysis: DietAnalysis) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
 
 
-            // Stats Table and Chart
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Side: Table
                 Column(
                     modifier = Modifier
                         .weight(0.7f)
@@ -508,14 +526,16 @@ fun DietChartCard(dietAnalysis: DietAnalysis) {
                     DietStatRow(label = "Fats (g)", count = dietAnalysis.averageFats.toInt())
                 }
 
-                // Right Side: Chart
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    DietCaloriesChart(dietAnalysis.dailyCalories)
+                    DietCaloriesMPChart(
+                        dailyCalories = dietAnalysis.dailyCalories,
+                        dateRange = dateRange
+                    )
                 }
             }
         }
@@ -559,7 +579,7 @@ fun DietStatRow(label: String, count: Int) {
 }
 
 @Composable
-fun ExerciseChartCard(exerciseAnalysis: ExerciseAnalysis) {
+fun ExerciseChartCard(exerciseAnalysis: ExerciseAnalysis, dateRange: Pair<java.time.LocalDate, java.time.LocalDate>) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -591,9 +611,8 @@ fun ExerciseChartCard(exerciseAnalysis: ExerciseAnalysis) {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Total Minutes
                     Text(
-                        text = "Past 7 Days - All Periods",
+                        text = "${dateRange.first.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - ${dateRange.second.format(java.time.format.DateTimeFormatter.ofPattern("MMM d"))} - All Periods",
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1
                     )
@@ -618,24 +637,28 @@ fun ExerciseChartCard(exerciseAnalysis: ExerciseAnalysis) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Daily exercise minutes chart
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    ExerciseMinutesChart(exerciseAnalysis.dailyMinutes)
+                    ExerciseMinutesMPChart(
+                        dailyMinutes = exerciseAnalysis.dailyMinutes,
+                        dateRange = dateRange
+                    )
                 }
                 
-                // Exercise types pie chart
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    ExerciseTypesChart(exerciseAnalysis.exerciseTypes)
+                    ExerciseTypesMPChart(
+                        exerciseTypes = exerciseAnalysis.exerciseTypes,
+                        dateRange = dateRange
+                    )
                 }
             }
 

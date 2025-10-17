@@ -343,11 +343,10 @@ fun HealthCorrelationChart(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     
-    // Prepare data for correlation analysis
-    val dailyData = (0..6).map { daysBack ->
-        val date = java.time.LocalDate.now().minusDays(daysBack.toLong())
+    val dailyData = glucoseAnalysis.dailyAverages.map { glucoseData ->
+        val date = glucoseData.date
         
-        val glucose = glucoseAnalysis.dailyAverages.find { it.date == date }?.average ?: 0f
+        val glucose = glucoseData.average ?: 0f
         val calories = dietAnalysis.dailyCalories.find { it.date == date }?.calories ?: 0
         val exercise = exerciseAnalysis.dailyMinutes.find { it.date == date }?.minutes ?: 0
         
@@ -357,7 +356,7 @@ fun HealthCorrelationChart(
             calories = calories,
             exercise = exercise
         )
-    }.reversed()
+    }
     
     if (dailyData.all { it.glucose == 0f && it.calories == 0 && it.exercise == 0 }) {
         Box(
@@ -389,12 +388,10 @@ fun HealthCorrelationChart(
             val chartHeight = canvasHeight - 60f
             val chartWidth = canvasWidth - 40f
             
-            // Normalize data for visualization
             val maxGlucose = dailyData.maxOfOrNull { it.glucose } ?: 10f
             val maxCalories = dailyData.maxOfOrNull { it.calories } ?: 2000
             val maxExercise = dailyData.maxOfOrNull { it.exercise } ?: 60
             
-            // Draw background grid
             val gridColor = colorScheme.outline.copy(alpha = 0.1f)
             for (i in 0..4) {
                 val y = 20f + (chartHeight / 4) * i
@@ -406,7 +403,6 @@ fun HealthCorrelationChart(
                 )
             }
             
-            // Draw glucose line (primary)
             if (dailyData.any { it.glucose > 0 }) {
                 val glucosePoints = dailyData.mapIndexed { index, data ->
                     val x = 20f + (chartWidth / (dailyData.size - 1)) * index
@@ -415,7 +411,6 @@ fun HealthCorrelationChart(
                     Offset(x, y)
                 }
                 
-                // Draw glucose line
                 for (i in 0 until glucosePoints.size - 1) {
                     if (dailyData[i].glucose > 0 && dailyData[i + 1].glucose > 0) {
                         drawLine(
@@ -427,7 +422,6 @@ fun HealthCorrelationChart(
                     }
                 }
                 
-                // Draw glucose points
                 glucosePoints.forEachIndexed { index, point ->
                     if (dailyData[index].glucose > 0) {
                         drawCircle(
@@ -439,7 +433,6 @@ fun HealthCorrelationChart(
                 }
             }
             
-            // Draw calories bars (secondary)
             val barWidth = chartWidth / dailyData.size * 0.3f
             dailyData.forEachIndexed { index, data ->
                 if (data.calories > 0) {
@@ -456,7 +449,6 @@ fun HealthCorrelationChart(
                 }
             }
             
-            // Draw exercise indicators (tertiary)
             dailyData.forEachIndexed { index, data ->
                 if (data.exercise > 0) {
                     val x = 20f + (chartWidth / dailyData.size) * index
@@ -473,7 +465,6 @@ fun HealthCorrelationChart(
             }
         }
         
-        // Legend
         Column(
             modifier = Modifier.align(Alignment.BottomStart)
         ) {
@@ -527,7 +518,6 @@ fun HealthCorrelationChart(
             }
         }
         
-        // Correlation insights
         val insights = generateCorrelationInsights(glucoseAnalysis, dietAnalysis, exerciseAnalysis)
         if (insights.isNotEmpty()) {
             Column(
@@ -559,7 +549,6 @@ private fun generateCorrelationInsights(
 ): List<String> {
     val insights = mutableListOf<String>()
     
-    // Glucose insights
     if (glucose.averageGlucose > 0) {
         when {
             glucose.averageGlucose < 4f -> insights.add("Low glucose levels detected")
