@@ -41,6 +41,8 @@ fun GlucoseSpikeAnalysisScreen(
     val analysisProgress by viewModel.analysisProgress.collectAsState()
     
     var showDateRangePicker by remember { mutableStateOf(false) }
+    var selectedStartDate by remember { mutableStateOf(java.time.LocalDate.now().minusDays(7)) }
+    var selectedEndDate by remember { mutableStateOf(java.time.LocalDate.now()) }
     
     Column(
         modifier = Modifier
@@ -66,6 +68,53 @@ fun GlucoseSpikeAnalysisScreen(
                 Icon(
                     imageVector = Icons.Default.DateRange,
                     contentDescription = "Select Date Range"
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Explanation Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "How Glucose Spike Analysis Works",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "• Detects glucose readings > 7.8 mmol/L as spikes",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                
+                Text(
+                    text = "• Analyzes food consumption 4 hours before each spike",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                
+                Text(
+                    text = "• Calculates correlation using: ((peak glucose - baseline) / baseline) × 100% (capped at 100%)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                
+                Text(
+                    text = "• Provides personalized food recommendations based on spike patterns",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
@@ -625,19 +674,55 @@ fun DateRangePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (start: java.time.LocalDateTime, end: java.time.LocalDateTime) -> Unit
 ) {
-    // Simplified date range picker - in a real app, you'd use a proper date picker
+    var startDate by remember { mutableStateOf(java.time.LocalDate.now().minusDays(7)) }
+    var endDate by remember { mutableStateOf(java.time.LocalDate.now()) }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Select Date Range") },
-        text = { Text("Date range picker would go here") },
+        text = {
+            Column {
+                Text("Start Date: ${startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))}")
+                Text("End Date: ${endDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))}")
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Quick selection buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = {
+                            endDate = java.time.LocalDate.now()
+                            startDate = endDate.minusDays(7)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Last 7 days")
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Button(
+                        onClick = {
+                            endDate = java.time.LocalDate.now()
+                            startDate = endDate.minusDays(30)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Last 30 days")
+                    }
+                }
+            }
+        },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val now = java.time.LocalDateTime.now()
-                    onConfirm(now.minusDays(7), now)
+                    onConfirm(startDate.atStartOfDay(), endDate.atTime(23, 59, 59))
                 }
             ) {
-                Text("Last 7 Days")
+                Text("Analyze")
             }
         },
         dismissButton = {
