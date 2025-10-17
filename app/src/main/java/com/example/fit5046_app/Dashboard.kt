@@ -35,7 +35,7 @@ fun Dashboard(
     val context = LocalContext.current
     val viewModel = remember { DashboardViewModel(context.applicationContext as android.app.Application) }
     val dashboardData by viewModel.dashboardData.collectAsState()
-    
+
     var nextReminder by remember { mutableStateOf<MedicationReminder?>(null) }
     var reminderText by remember { mutableStateOf("No upcoming reminders") }
 
@@ -108,6 +108,7 @@ fun Dashboard(
                 )
             }
         }
+
 
         Row(
             modifier = Modifier

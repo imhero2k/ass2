@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +20,8 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.fit5046_app.ui.theme.AppPrimary
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -167,6 +171,9 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
     val currentDestination = navBackStackEntry?.destination
     val currentScreen =
         Destination.entries.find { navBackStackEntry?.destination?.route?.startsWith(it.route) == true }
+
+    // Floating chatbot state
+    var showFloatingChatBot by remember { mutableStateOf(false) }
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -242,7 +249,22 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                         navigationIconContentColor = Color.White,
                     )
                 )
-            }
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { showFloatingChatBot = true },
+                    containerColor = AppPrimary,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Chat,
+                        contentDescription = "Chat with AI",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            floatingActionButtonPosition = FabPosition.End
         ) { innerPadding ->
             NavHost(
                 navController = navController,
@@ -311,5 +333,11 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 }
             }
         }
+
+        // Floating ChatBot Dialog
+        FloatingChatBot(
+            isVisible = showFloatingChatBot,
+            onDismiss = { showFloatingChatBot = false }
+        )
     }
 }
