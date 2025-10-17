@@ -174,6 +174,13 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
 
     // Floating chatbot state
     var showFloatingChatBot by remember { mutableStateOf(false) }
+
+    // Reset chatbot state when navigating away from Dashboard
+    LaunchedEffect(currentScreen) {
+        if (currentScreen != Destination.DASHBOARD) {
+            showFloatingChatBot = false
+        }
+    }
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -251,17 +258,20 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showFloatingChatBot = true },
-                    containerColor = AppPrimary,
-                    modifier = Modifier.size(56.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Chat,
-                        contentDescription = "Chat with AI",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
+                // Only show floating chatbot button on Dashboard
+                if (currentScreen == Destination.DASHBOARD) {
+                    FloatingActionButton(
+                        onClick = { showFloatingChatBot = true },
+                        containerColor = AppPrimary,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Chat,
+                            contentDescription = "Chat with AI",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             },
             floatingActionButtonPosition = FabPosition.End
@@ -334,10 +344,12 @@ fun ExpandedModalNavigationRail(authViewModel: AuthViewModel) {
             }
         }
 
-        // Floating ChatBot Dialog
-        FloatingChatBot(
-            isVisible = showFloatingChatBot,
-            onDismiss = { showFloatingChatBot = false }
-        )
+        // Floating ChatBot Dialog - only show on Dashboard
+        if (currentScreen == Destination.DASHBOARD) {
+            FloatingChatBot(
+                isVisible = showFloatingChatBot,
+                onDismiss = { showFloatingChatBot = false }
+            )
+        }
     }
 }

@@ -33,8 +33,12 @@ data class UserContext(
     val medicationCount: Int = 0,
     val glucoseReadings: Int = 0,
     val mealCalories: MealCalories = MealCalories(),
-    val userProfile: UserProfile? = null
-)
+    val userProfile: UserProfile? = null,
+    // Enhanced context with detailed information
+    val foodIntakeDetails: List<String> = emptyList(),
+    val exerciseDetails: List<String> = emptyList(),
+    val medicationDetails: List<String> = emptyList()
+) // Enhanced UserContext with detailed information
 
 data class MealCalories(
     val breakfast: Int = 0,
@@ -179,10 +183,30 @@ class OllamaService {
                     if (userContext.exerciseMinutes > 0) {
                         appendLine("Today's Exercise: ${userContext.exerciseMinutes} minutes")
                     }
+                    if (userContext.exerciseDetails.isNotEmpty()) {
+                        appendLine("Exercise Details:")
+                        userContext.exerciseDetails.forEach { detail ->
+                            appendLine("  $detail")
+                        }
+                    }
+
+                    // Food intake details
+                    if (userContext.foodIntakeDetails.isNotEmpty()) {
+                        appendLine("Food Intake Today:")
+                        userContext.foodIntakeDetails.forEach { detail ->
+                            appendLine("  $detail")
+                        }
+                    }
 
                     // Medication information
                     if (userContext.medicationCount > 0) {
                         appendLine("Medications Taken Today: ${userContext.medicationCount} doses")
+                    }
+                    if (userContext.medicationDetails.isNotEmpty()) {
+                        appendLine("Medication Details:")
+                        userContext.medicationDetails.forEach { detail ->
+                            appendLine("  $detail")
+                        }
                     }
 
                     // User profile information

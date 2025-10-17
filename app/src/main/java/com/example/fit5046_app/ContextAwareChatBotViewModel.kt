@@ -8,11 +8,13 @@ import com.example.fit5046_app.service.UserContext
 import com.example.fit5046_app.service.UserProfile
 import com.example.fit5046_app.service.MealCalories
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 import java.time.LocalDate
 import java.time.ZoneId
@@ -30,6 +32,7 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
 
     private val repository: LogRepository = LogRepository(application)
     private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
     private val currentUserId: String
         get() = auth.currentUser?.uid ?: "anonymous"
 
@@ -78,29 +81,10 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
             try {
                 android.util.Log.d("ContextAwareChatBot", "About to call getUserContext()")
 
-                // Create a simple test context first
-                val testContext = UserContext(
-                    latestGlucose = 6.8f,
-                    glucoseTrend = listOf(6.5f, 7.2f, 6.8f),
-                    todayCalories = 1850,
-                    exerciseMinutes = 30,
-                    medicationCount = 2,
-                    glucoseReadings = 3,
-                    mealCalories = MealCalories(breakfast = 450, lunch = 600, dinner = 800),
-                    userProfile = UserProfile(
-                        name = "Test User",
-                        age = 45,
-                        diabetesType = "Type 2",
-                        targetGlucose = 7.0f,
-                        medications = listOf("Metformin", "Insulin")
-                    )
-                )
-                android.util.Log.d("ContextAwareChatBot", "Using test context: $testContext")
-
                 val userContext = getUserContext()
                 android.util.Log.d("ContextAwareChatBot", "User context returned: $userContext")
                 android.util.Log.d("ContextAwareChatBot", "About to call OllamaService.generateResponse()")
-                val response = OllamaService.generateResponse(currentInput, testContext) // Use test context for now
+                val response = OllamaService.generateResponse(currentInput, userContext)
                 android.util.Log.d("ContextAwareChatBot", "OllamaService response received")
                 addMessage(ChatMessage(text = response, isUser = false))
             } catch (e: Exception) {
@@ -145,7 +129,7 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
             val glucoseReadings = todayGlucoseLogs.size
             val glucoseTrend = todayGlucoseLogs.map { it.value }
 
-            // Get diet logs
+            // Get diet logs with detailed food information
             val dietLogs = repository.getAllDietLogs().first()
             android.util.Log.d("ContextAwareChatBot", "Total diet logs: ${dietLogs.size}")
             val todayDietLogs = dietLogs.filter {
@@ -159,7 +143,14 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
                 dinner = todayDietLogs.filter { it.period.toString() == "Dinner" }.sumOf { (it.calories ?: 0).toInt() }
             )
 
-            // Get exercise logs
+            // Get detailed food intake
+            val foodIntakeDetails = todayDietLogs.map { log ->
+                val foodItems = log.foodItems?.joinToString(", ") ?: "Unknown food"
+                "• $foodItems (${log.calories ?: 0} cal) at ${log.dateTime.toLocalTime().toString().substring(0, 5)} - ${log.period}"
+            }
+            android.util.Log.d("ContextAwareChatBot", "Food intake details: ${foodIntakeDetails.size} items")
+
+            // Get exercise logs with detailed information
             val exerciseLogs = repository.getAllExerciseLogs().first()
             android.util.Log.d("ContextAwareChatBot", "Total exercise logs: ${exerciseLogs.size}")
             val todayExerciseLogs = exerciseLogs.filter {
@@ -167,6 +158,12 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
             }
             android.util.Log.d("ContextAwareChatBot", "Today's exercise logs: ${todayExerciseLogs.size}")
             val exerciseMinutes = todayExerciseLogs.sumOf { it.durationMinutes }
+
+            // Get detailed exercise information
+            val exerciseDetails = todayExerciseLogs.map { log ->
+                "• ${log.exerciseType} for ${log.durationMinutes} minutes at ${log.dateTime.toLocalTime().toString().substring(0, 5)} (${log.intensity} intensity)"
+            }
+            android.util.Log.d("ContextAwareChatBot", "Exercise details: ${exerciseDetails.size} activities")
 
             // Get medication logs
             val medicationLogs = repository.getAllMedicationLogs().first()
@@ -177,14 +174,14 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
             android.util.Log.d("ContextAwareChatBot", "Today's medication logs: ${todayMedicationLogs.size}")
             val medicationCount = todayMedicationLogs.size
 
-            // Create user profile (you can enhance this with actual user data)
-            val userProfile = UserProfile(
-                name = "User", // Get from user profile
-                age = 0, // Get from user profile
-                diabetesType = "Type 2", // Get from user profile
-                targetGlucose = 7.0f, // Get from user profile
-                medications = todayMedicationLogs.map { it.name }.distinct()
-            )
+            // Get detailed medication information
+            val medicationDetails = todayMedicationLogs.map { log ->
+                "• ${log.name} (${log.dosage}) at ${log.dateTime.toLocalTime().toString().substring(0, 5)}"
+            }
+            android.util.Log.d("ContextAwareChatBot", "Medication details: ${medicationDetails.size} doses")
+
+            // Get user profile from Firestore
+            val userProfile = getUserProfileFromFirestore()
 
             val context = UserContext(
                 latestGlucose = latestGlucose,
@@ -194,34 +191,18 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
                 medicationCount = medicationCount,
                 glucoseReadings = glucoseReadings,
                 mealCalories = mealCalories,
-                userProfile = userProfile
+                userProfile = userProfile,
+                // Enhanced context with detailed information
+                foodIntakeDetails = foodIntakeDetails,
+                exerciseDetails = exerciseDetails,
+                medicationDetails = medicationDetails
             )
 
             android.util.Log.d("ContextAwareChatBot", "Built context: glucose=${latestGlucose}, calories=$todayCalories, exercise=$exerciseMinutes, meds=$medicationCount")
             android.util.Log.d("ContextAwareChatBot", "Context details: latestGlucose=$latestGlucose, glucoseReadings=$glucoseReadings, todayCalories=$todayCalories, exerciseMinutes=$exerciseMinutes, medicationCount=$medicationCount")
-
-            // If no real data found, create a test context for debugging
-            if (latestGlucose == null && todayCalories == 0 && exerciseMinutes == 0 && medicationCount == 0) {
-                android.util.Log.d("ContextAwareChatBot", "No real data found, creating test context")
-                val testContext = UserContext(
-                    latestGlucose = 6.8f,
-                    glucoseTrend = listOf(6.5f, 7.2f, 6.8f),
-                    todayCalories = 1850,
-                    exerciseMinutes = 30,
-                    medicationCount = 2,
-                    glucoseReadings = 3,
-                    mealCalories = MealCalories(breakfast = 450, lunch = 600, dinner = 800),
-                    userProfile = UserProfile(
-                        name = "Test User",
-                        age = 45,
-                        diabetesType = "Type 2",
-                        targetGlucose = 7.0f,
-                        medications = listOf("Metformin", "Insulin")
-                    )
-                )
-                android.util.Log.d("ContextAwareChatBot", "Test context created: $testContext")
-                return testContext
-            }
+            android.util.Log.d("ContextAwareChatBot", "Food details: ${foodIntakeDetails.size} items")
+            android.util.Log.d("ContextAwareChatBot", "Exercise details: ${exerciseDetails.size} activities")
+            android.util.Log.d("ContextAwareChatBot", "Medication details: ${medicationDetails.size} doses")
 
             context
         } catch (e: Exception) {
@@ -236,6 +217,50 @@ class ContextAwareChatBotViewModel(application: Application) : AndroidViewModel(
         _uiState.value = _uiState.value.copy(
             messages = _uiState.value.messages + message
         )
+    }
+
+    private suspend fun getUserProfileFromFirestore(): UserProfile {
+        return try {
+            android.util.Log.d("ContextAwareChatBot", "Getting user profile from Firestore for user: $currentUserId")
+
+            val userDoc = firestore.collection("users").document(currentUserId).get().await()
+
+            if (userDoc.exists()) {
+                val name = userDoc.getString("name") ?: "User"
+                val age = userDoc.getLong("age")?.toInt() ?: 0
+                val diabetesType = userDoc.getString("diabetesType") ?: "Type 2"
+                val targetGlucose = userDoc.getDouble("targetGlucose")?.toFloat() ?: 7.0f
+                val medications = userDoc.get("medications") as? List<String> ?: emptyList()
+
+                android.util.Log.d("ContextAwareChatBot", "Firestore profile: name=$name, age=$age, diabetesType=$diabetesType, targetGlucose=$targetGlucose")
+
+                UserProfile(
+                    name = name,
+                    age = age,
+                    diabetesType = diabetesType,
+                    targetGlucose = targetGlucose,
+                    medications = medications
+                )
+            } else {
+                android.util.Log.d("ContextAwareChatBot", "No user profile found in Firestore, using defaults")
+                UserProfile(
+                    name = "User",
+                    age = 0,
+                    diabetesType = "Type 2",
+                    targetGlucose = 7.0f,
+                    medications = emptyList()
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ContextAwareChatBot", "Error getting user profile from Firestore", e)
+            UserProfile(
+                name = "User",
+                age = 0,
+                diabetesType = "Type 2",
+                targetGlucose = 7.0f,
+                medications = emptyList()
+            )
+        }
     }
 
     private fun testConnection() {
